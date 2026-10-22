@@ -9,3 +9,4 @@
 @media(min-width:1600px){.member-name{font-size:22px}.member-score b{font-size:31px}.caption{font-size:21px}.goal-chip{font-size:18px}.goal-chip strong{font-size:34px}}
 @media(max-width:1100px){.member-name{font-size:17px}.member-score b{font-size:24px}.member-score small{font-size:14px}.caption{font-size:17px}.progress-info{font-size:13px}.progress-info strong{font-size:14px}.goal-chip strong{font-size:28px}}
 @media(max-width:800px){.member-name{font-size:20px}.member-score b{font-size:28px}.caption{font-size:19px}.progress-info{font-size:13px}.progress-info strong{font-size:14px}.goal-chip{font-size:16px}.goal-chip strong{font-size:30px}}
+.score-block>.goal-chip{display:inline-flex;margin-bottom:12px}.score-block>.caption{display:block;font-family:var(--font);font-weight:800}.hero-content{margin-top:4px}@media(min-width:1600px){.hero-content{margin-top:8px}}
