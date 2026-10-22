@@ -16,16 +16,16 @@
 <body>
   <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
   <div class="page-shell">
-    <header class="page-header"><a class="brand" href="./" aria-label="KIMHANI LIVE 홈"><span class="brand-symbol">✦</span><span>KIMHANI<span class="brand-sub">PLAY TOGETHER, SHINE TOGETHER</span></span></a><span class="edition">YOUR LITTLE LIVE STUDIO <span>✧</span></span></header>
-    <div class="intro"><div><div class="eyebrow">FOR OUR TEAM, FOR THE WIN</div><h1>오늘도, <span>우리답게.</span><i>✧</i></h1><p>함께 쌓는 한 점, 함께 만드는 하이라이트.</p></div><button id="fullscreen" class="icon-button" title="점수판 전체 화면">⛶ <span>전체 화면</span></button></div>
+    <header class="page-header"><a class="brand" href="./" aria-label="KIMHANI LIVE 홈"><span class="brand-symbol">✦</span><span>KIMHANI</span></a><span class="edition">YOUR LITTLE LIVE STUDIO <span>✧</span></span></header>
+    <div class="intro"><div><h1>오늘도 <span>화내지말자</span><i>✧</i></h1></div><button id="fullscreen" class="icon-button" title="점수판 전체 화면">⛶ <span>전체 화면</span></button></div>
     <main class="studio" id="studio">
-      <div class="studio-top"><div class="studio-title"><span class="live-dot"></span><h2>딜킬 LIVE</h2><span class="tag">TEAM SCOREBOARD</span></div><span class="save-state" id="saveState" role="status">이 브라우저에 자동 저장</span></div>
+      <div class="studio-top"><div class="studio-title"><span class="live-dot"></span><h2>딜킬 LIVE</h2><span class="tag">TEAM SCOREBOARD</span></div><span class="save-state" id="saveState" role="status" hidden>이 브라우저에 자동 저장</span></div>
       <div class="workspace">
         <section class="score-side" aria-label="실시간 점수판">
           <div class="hero" id="hero">
-            <div class="hero-top"><span class="eyebrow">OUR NEXT MILESTONE</span><span class="goal-chip">목표 <strong id="target">70</strong><small>점</small></span></div>
-            <div class="hero-content"><div class="score-block"><span class="caption" id="scoreCaption">현재 팀 점수</span><div class="score-number" id="current">0</div><div class="score-note" id="scoreNote">우리의 첫 하이라이트를 기다리는 중</div></div><div id="memberScores" class="member-scores" aria-label="멤버별 점수"></div></div>
-            <div class="progress-info"><span id="progressLabel">목표를 향해 차근차근</span><strong id="remaining">70점 남았어요</strong></div><div class="progress-track" role="progressbar" aria-label="목표 달성률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><i id="progressBar"></i></div>
+            <div class="hero-top"><span class="goal-chip">목표 <strong id="target">70</strong><small>점</small></span></div>
+            <div class="hero-content"><div class="score-block"><span class="caption" id="scoreCaption">현재 팀 점수</span><div class="score-number" id="current">0</div><div class="score-note" id="scoreNote" hidden>우리의 첫 하이라이트를 기다리는 중</div></div><div id="memberScores" class="member-scores" aria-label="멤버별 점수"></div></div>
+            <div class="progress-info"><span id="progressLabel">목표까지</span><strong id="remaining">70점 남았어요</strong></div><div class="progress-track" role="progressbar" aria-label="목표 달성률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><i id="progressBar"></i></div>
             <div class="mission" id="mission" hidden><span>✦</span><strong>MISSION CLEAR</strong><small>우리가 해냈어요!</small></div><div class="hero-glint" aria-hidden="true">✧</div>
           </div>
           <div class="round-summary"><div class="summary-title"><span><i>✦</i> <b id="roundTitle">1번째 판</b>의 하이라이트</span><strong><span id="roundScore">0</span><small> 점</small></strong></div><div class="score-pills" id="scoreParts"></div></div>
