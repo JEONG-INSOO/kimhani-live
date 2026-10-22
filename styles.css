@@ -59,3 +59,6 @@ body{line-height:1.6}.goal-chip{line-height:1.5}.score-number{letter-spacing:-3p
 
 /* Fixed panel dimensions with a clean score background. */
 .studio{resize:none}.hero-glint,.resize-hint{display:none}.studio-bottom{display:none}
+
+/* Keep navigation below the controls and hide the match summary. */
+.round-summary{display:none}.control-side{display:flex;flex-direction:column}.control-side>.control-card{order:0}.control-side>.tabs{order:1;margin-top:13px;margin-bottom:0}
