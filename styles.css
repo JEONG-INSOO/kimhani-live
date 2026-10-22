@@ -49,3 +49,7 @@ body{line-height:1.6}.goal-chip{line-height:1.5}.score-number{letter-spacing:-3p
 
 /* Center the current team score within its score column. */
 .score-block>.caption,.score-block>.score-number{text-align:center}
+
+/* Align the goal with the first member row and keep the resize hint at right. */
+.hero-content{align-items:start}.score-block>.goal-chip{min-height:45.9px;line-height:1.35}.goal-chip strong{line-height:1.2}.studio-bottom{justify-content:flex-end}
+@media(max-width:1100px){.score-block>.goal-chip{min-height:37.8px}}
