@@ -8,8 +8,8 @@
   <title>KIMHANI · 딜킬 LIVE</title>
   <link rel="preload" href="./fonts/Jalnan2TTF.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=16">
-  <script type="module" src="./app.js?v=16"></script>
+  <link rel="stylesheet" href="./styles.css?v=17">
+  <script type="module" src="./app.js?v=17"></script>
 </head>
 <body>
   <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
@@ -24,7 +24,7 @@
             
             <div class="hero-content"><div class="score-block"><span class="goal-chip">목표 <strong id="target">70</strong><small>점</small></span><span class="caption" id="scoreCaption">현재 팀 점수</span><div class="score-number" id="current">0</div><div class="score-note" id="scoreNote" hidden>우리의 첫 하이라이트를 기다리는 중</div></div><div id="memberScores" class="member-scores" aria-label="멤버별 점수"></div></div>
             <div class="progress-info"><span id="progressLabel">목표까지</span><strong id="remaining">70점 남았어요</strong></div><div class="progress-track" role="progressbar" aria-label="목표 달성률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><i id="progressBar"></i></div>
-            <div class="mission" id="mission" hidden><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span>✦</span><strong>MISSION CLEAR</strong><small>오늘도 화 안내기 성공!</small></div><div class="hero-glint" aria-hidden="true">✧</div>
+            <div class="mission" id="mission" hidden><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span>✦</span><strong>MISSION CLEAR</strong><small>오늘도 화 안내기 성공!</small></div>
           </div>
           <div class="round-summary"><div class="summary-title"><span><i>✦</i> <b id="roundTitle">1번째 매치</b> 스코어</span><strong><span id="roundScore">0</span><small> 점</small></strong></div><div class="score-pills" id="scoreParts"></div></div>
           
@@ -42,7 +42,7 @@
           <div id="settingsPanel" class="control-card" role="tabpanel" aria-labelledby="settingsTab" hidden><div class="card-heading"><div><span class="eyebrow">TEAM SCOREBOARD</span><h3>멤버 설정</h3></div><span class="mini-flower" aria-hidden="true">✧</span></div><form id="settingsForm"><label for="goal">목표 점수</label><div class="goal-input"><input id="goal" type="number" min="0" max="1000000000" step="any" required><span>POINTS</span></div><div class="settings-labels"><span>멤버 이름</span><span>다이 차감 기준 (딜)</span></div><div id="settingsNames"></div><p class="settings-hint">100 = 다이 1점 차감 · 0 = 차감 없음</p><button class="primary" type="submit">설정 적용 <span>✓</span></button></form></div>
         </section>
       </div>
-      <footer class="studio-bottom"><span id="message" role="status" hidden><i>✓</i> 입력하는 순간, 자동으로 저장돼요.</span><span class="resize-hint">모서리를 드래그해 크기 조절 ↘</span></footer>
+      <footer class="studio-bottom"><span id="message" role="status" hidden><i>✓</i> 입력하는 순간, 자동으로 저장돼요.</span></footer>
     </main>
     <footer class="page-footer"><span>MADE FOR KIMHANI</span></footer>
   </div>

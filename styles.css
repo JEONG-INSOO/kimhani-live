@@ -56,3 +56,6 @@ body{line-height:1.6}.goal-chip{line-height:1.5}.score-number{letter-spacing:-3p
 
 /* Softer caption for the current team score. */
 .score-block>.caption{color:#a17a8e}
+
+/* Fixed panel dimensions with a clean score background. */
+.studio{resize:none}.hero-glint,.resize-hint{display:none}.studio-bottom{display:none}
