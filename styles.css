@@ -35,3 +35,9 @@ label,.settings-labels{font-size:13px}input[type=number],input[type=text],select
 .goal-chip{font-family:var(--pretty);font-size:24px;gap:8px;line-height:1.4}.goal-chip strong{font-family:var(--font);font-size:38px}.goal-chip small,.summary-title small{font-family:var(--pretty);font-size:21px;font-weight:400}.score-block>.caption{font-size:23px}.member-name{font-size:24px}.member-score b{font-size:34px}.member-score small{font-size:19px}.progress-info{font-size:18px}.progress-info strong{font-size:20px}.summary-title{font-size:18px}.summary-title strong{font-size:30px}.score-pills span{font-size:12px;padding:5px 8px}
 @media(max-width:1100px){.score-block>.caption{font-size:20px}.member-name{font-size:20px}.member-score b{font-size:28px}.member-score small{font-size:16px}.progress-info{font-size:16px}.progress-info strong{font-size:17px}.goal-chip{font-size:22px}.goal-chip strong{font-size:34px}}
 @media(max-width:800px){.intro h1{font-size:35px}.summary-title{font-size:16px}.control-card{padding:22px 16px 13px}.check-chip{font-size:13px}.roster{gap:9px 7px}.player-label b{font-size:16px}.round-select select{font-size:14px}}
+
+/* User-provided Jalnan 2, bundled for consistent rendering on every device. */
+@font-face{font-family:'Jalnan 2';src:url('./fonts/Jalnan2TTF.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
+:root{--font:'Jalnan 2',sans-serif;--pretty:'Jalnan 2',sans-serif}
+body{line-height:1.6}.goal-chip{line-height:1.5}.score-number{letter-spacing:-3px}.member-score b{letter-spacing:-.5px}.intro h1{letter-spacing:-1px}.card-heading h3{line-height:1.5}.mission strong{font-size:clamp(28px,3.5vw,48px);letter-spacing:0}
+@media(max-width:800px){.intro h1{font-size:30px}.score-block>.caption{font-size:18px}.member-name{font-size:19px}.progress-info{font-size:14px}.progress-info strong{font-size:15px}.summary-title{font-size:14px}}
