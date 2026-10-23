@@ -11,13 +11,13 @@ test('모든 크기의 기본 글자와 숫자는 중복 없이 생성된다', (
 test('가로, 세로, 양쪽 대각선은 각 크기에서 완성되고 취소된다', () => {
   for (const size of SIZES) for (const line of [Array.from({length:size},(_,i)=>i), Array.from({length:size},(_,i)=>i*size), Array.from({length:size},(_,i)=>i*(size+1)), Array.from({length:size},(_,i)=>(i+1)*(size-1))]) {
     const b = newBoard(size, 'number'); line.forEach(i => b.checked[i] = true);
-    assert.equal(progress(b,size).lines, 1); assert.equal(progress(b,size).clear, true);
+    assert.equal(progress(b,size).lines, 1); assert.equal(progress(b,size).clear, false);
     b.checked[line[0]] = false; assert.equal(progress(b,size).lines, 0); assert.equal(progress(b,size).clear, false);
   }
 });
-test('중복 교차점을 세지 않고 줄 수 목표와 전체 칸 목표를 구분한다', () => {
+test('모든 칸을 체크해야 완성되며 기존 줄 수 목표는 무시한다', () => {
   const b = newBoard(3, 'alphabet'); b.goal = 2; [0,1,2].forEach(i => b.checked[i] = true); assert.equal(progress(b,3).clear,false);
-  [3,6].forEach(i => b.checked[i] = true); assert.equal(progress(b,3).clear,true); assert.equal(progress(b,3).count,5);
+  [3,6].forEach(i => b.checked[i] = true); assert.equal(progress(b,3).clear,false); assert.equal(progress(b,3).count,5);
   b.goal = 'all'; assert.equal(progress(b,3).clear,false); b.checked.fill(true); assert.equal(progress(b,3).lines,8); assert.equal(progress(b,3).clear,true);
   for (const size of SIZES) { const full = newBoard(size,'number'); full.checked.fill(true); assert.equal(progress(full,size).lines,size*2+2); }
 });
@@ -26,7 +26,16 @@ test('8개 빙고판의 수정한 글자와 진행 상황은 독립적으로 보
   state.boards['3-alphabet'].labels[0] = '하니'; state.boards['3-alphabet'].checked[0] = true;
   const restored=validateBingo(JSON.parse(JSON.stringify(state))); assert.deepEqual(restored,state); assert.equal(restored.boards['3-number'].checked[0],false);
 });
-test('손상된 저장 값과 유효하지 않은 목표를 거부한다', () => {
+test('손상된 저장 값을 거부한다', () => {
   assert.throws(()=>validateBingo(null));
-  for (const mutation of [b=>b.checked[0]='true',b=>b.labels[0]='',b=>b.labels.pop(),b=>b.goal=9,b=>b.goal=0,b=>b.goal=1.5]) { const state=newState(); const b=newBoard(3,'alphabet'); state.boards['3-alphabet']=b; mutation(b); assert.throws(()=>validateBingo(state)); }
+  for (const mutation of [b=>b.checked[0]='true',b=>b.labels[0]='',b=>b.labels.pop()]) { const state=newState(); const b=newBoard(3,'alphabet'); state.boards['3-alphabet']=b; mutation(b); assert.throws(()=>validateBingo(state)); }
+});
+
+test('Q/U와 숫자 전용 100빙고, 이전 기록의 목표를 마이그레이션한다', () => {
+  assert.equal(newBoard(5,'alphabet').labels[16], 'Q/U');
+  assert.equal(newBoard(10,'alphabet').labels[16], '17');
+  const old = newState(); old.size=10; old.mode='alphabet';
+  old.boards['5-alphabet']=newBoard(5,'alphabet'); old.boards['5-alphabet'].labels[16]='Q'; old.boards['5-alphabet'].checked[16]=true; old.boards['5-alphabet'].goal=1;
+  old.boards['10-number']=newBoard(10,'number'); old.boards['10-number'].checked[0]=true;
+  const next=validateBingo(old); assert.equal(next.mode,'number'); assert.equal(next.boards['5-alphabet'].labels[16],'Q/U'); assert.equal(next.boards['5-alphabet'].checked[16],true); assert.equal(next.boards['10-number'].checked[0],true); assert.equal('goal' in next.boards['5-alphabet'],false);
 });

@@ -10,8 +10,8 @@
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css?v=20">
   <script type="module" src="./app.js?v=21"></script>
-  <link rel="stylesheet" href="./bingo.css?v=21">
-  <script type="module" src="./bingo.js?v=21"></script>
+  <link rel="stylesheet" href="./bingo.css?v=22">
+  <script type="module" src="./bingo.js?v=22"></script>
 </head>
 <body>
   <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
@@ -53,16 +53,15 @@
           <button type="button" data-bingo-size="5" aria-pressed="false"><b>5 × 5</b><small>25칸</small></button>
           <button type="button" data-bingo-size="10" aria-pressed="false"><b>100 빙고</b><small>10 × 10</small></button>
         </div></fieldset>
-        <fieldset><legend>칸에 넣을 글자</legend><div class="bingo-modes"><button type="button" data-bingo-mode="alphabet" aria-pressed="true">알파벳</button><button type="button" data-bingo-mode="number" aria-pressed="false">숫자</button></div></fieldset>
-        <div><label for="bingoGoal">MISSION CLEAR 목표</label><select id="bingoGoal"></select></div>
+        <fieldset id="bingoModePicker"><legend>칸에 넣을 글자</legend><div class="bingo-modes"><button type="button" data-bingo-mode="alphabet" aria-pressed="true">알파벳</button><button type="button" data-bingo-mode="number" aria-pressed="false">숫자</button></div></fieldset>
         <div class="bingo-tools"><button type="button" class="primary" id="bingoEdit" aria-pressed="false">✎ 글자 수정</button><button type="button" class="bingo-secondary" id="bingoShuffle">⇄ 글자 섞기</button><button type="button" class="reset" id="bingoReset">↺ 체크 초기화</button></div>
-        <p class="bingo-save" id="bingoSave" role="status">이 브라우저에 자동 저장돼요</p>
+        <p class="bingo-save" id="bingoSave" role="status" hidden></p>
       </aside>
       <div class="bingo-main">
         <div class="bingo-heading"><div><span class="eyebrow" id="bingoSubtitle">ALPHABET BINGO</span><h2 id="bingoTitle">3 × 3 빙고</h2></div><div class="bingo-line-count"><strong id="bingoLines">0</strong><span>줄 완성</span></div></div>
         <div class="bingo-board-wrap">
           <div class="bingo-grid" id="bingoGrid" role="group" aria-label="빙고판" aria-describedby="bingoHint"></div>
-          <div class="mission bingo-mission" id="bingoMission" hidden role="status"><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span aria-hidden="true">✦</span><strong>MISSION CLEAR</strong><small id="bingoMissionDetail"></small><button type="button" id="bingoContinue">빙고판 계속 보기 ↗</button></div>
+          <div class="mission bingo-mission" id="bingoMission" hidden role="status"><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span aria-hidden="true">✦</span><strong>MISSION CLEAR</strong><button type="button" id="bingoContinue">빙고판 계속 보기 ↗</button></div>
         </div>
         <div class="bingo-board-footer" aria-live="polite"><span>체크 <b id="bingoCount">0 / 9</b></span><span id="bingoClearBadge" hidden>✦ MISSION CLEAR</span><span id="bingoRemaining">9칸 남았어요</span></div>
         <p id="bingoHint" class="bingo-hint"></p>
