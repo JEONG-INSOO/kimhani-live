@@ -43,3 +43,9 @@
 @media(max-width:800px){.peel-layout{grid-template-columns:1fr}.peel-studio{padding:17px}.peel-hero{min-height:290px;padding:19px}.peel-number{font-size:76px}.peel-last{top:91px}}
 @media(max-width:480px){.peel-studio{padding:12px}.peel-last-name{font-size:11px}.peel-spin-area .peel-reel{height:64px;font-size:39px}.peel-spin-area .peel-op{font-size:50px}}
 @media(prefers-reduced-motion:reduce){.peel-last-name{animation:none}}
+/* Reserve the same target height regardless of its digit count. */
+.peel-number-frame{height:104px;min-height:104px;display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden}.peel-number,.peel-number.peel-long{flex:none;width:max-content;min-height:0;white-space:nowrap;overflow-wrap:normal;line-height:1.15}
+@media(max-width:800px){.peel-number-frame{height:88px;min-height:88px}}
+.peel-save-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px 10px}.peel-save-row>span{grid-column:1/-1}.peel-save-row .primary{width:100%;min-width:0}.peel-reset-rounds{align-self:stretch;padding:10px 13px;border:1px solid #dfc5d5;border-radius:9px;color:#93647f;background:#fbf4f8;font-size:12px;white-space:nowrap}.peel-reset-rounds:hover{background:#f1e1eb}#peelProgressResetDialog p{line-height:1.8}
+.peel-member-tools{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.peel-match-heading{flex-wrap:wrap}.peel-member-tools .peel-add{white-space:nowrap}.peel-match-heading h3{margin:0}
+@media(max-width:480px){.peel-match-heading h3{flex-basis:100%}.peel-member-tools{width:100%}.peel-member-tools .peel-add{flex:1}}

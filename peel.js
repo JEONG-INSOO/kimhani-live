@@ -1,4 +1,4 @@
-import {PEEL_KEY, OPS, emptyPeel, randomInt, summarize, validatePeel} from './peel-model.js?v=25';
+import {PEEL_KEY, OPS, emptyPeel, randomInt, summarize, validatePeel, resetPeelProgress} from './peel-model.js?v=28';
 const $ = id => document.getElementById(id), fmt = value => BigInt(value).toLocaleString('ko-KR');
 let state = emptyPeel(), busy = false, generation = 0, failed = false, blocked = false, displayedTarget = null, roundDraft = null, knownActive = new Set();
 let skipRequested = false, wakeReel = null, memberDrawing = false, spinPhase = 'idle', dismissResult = false;
@@ -15,6 +15,17 @@ function save() {
   catch { failed = true; notice('저장 공간을 사용할 수 없어요. 이 화면을 닫기 전에 기록을 확인해주세요.'); }
 }
 function line(tag, text, cls) { const el = document.createElement(tag); el.textContent = text; if (cls) el.className = cls; return el; }
+function paintTarget(value) {
+  const el = $('peelCurrent');
+  el.textContent = value === '0' ? '000' : fmt(value);
+  el.classList.toggle('peel-long', value.length > 7);
+  el.style.fontSize = '';
+  const available = el.parentElement.clientWidth;
+  if (available > 0 && el.scrollWidth > available) {
+    const size = parseFloat(getComputedStyle(el).fontSize);
+    el.style.fontSize = `${size * available / el.scrollWidth}px`;
+  }
+}
 function roundTotal() {
   const total = roundDraft.reduce((n,p) => n + (Number.isFinite(Number(p.kills)) ? Number(p.kills) : 0), 0);
   $('peelRoundTotal').textContent = total.toLocaleString('ko-KR') + '킬';
@@ -53,8 +64,7 @@ async function applyAnimated(event, token, keepBusy = false) {
     if (token !== generation) return;
     const eased = BigInt(Math.round((1-Math.pow(1-i/steps,3))*10000));
     displayedTarget = String(from + (to-from)*eased/10000n);
-    el.textContent = displayedTarget === '0' ? '000' : fmt(displayedTarget);
-    el.classList.toggle('peel-long', displayedTarget.length > 7);
+    paintTarget(displayedTarget);
     if (steps > 1) await sleep(20);
   }
   if (token !== generation) return;
@@ -63,8 +73,7 @@ async function applyAnimated(event, token, keepBusy = false) {
 function render() {
   const s = summarize(state), locked = busy || memberDrawing || s.clear || blocked;
   const shown = displayedTarget ?? s.remaining;
-  $('peelCurrent').textContent = shown === '0' ? '000' : fmt(shown);
-  $('peelCurrent').classList.toggle('peel-long', shown.length > 7);
+  paintTarget(shown);
   $('peelHero').classList.toggle('is-clear', s.clear && !busy);
   $('peelMission').hidden = !s.clear || busy;
   $('peelSpin').disabled = locked;
@@ -77,6 +86,7 @@ function render() {
   $('peelName').disabled = locked; $('peelFixed').disabled = locked;
   renderRoundInputs(s, locked);
   $('peelRecord').disabled = locked || !s.started || !roundDraft.length;
+  $('peelResetRounds').disabled = busy || memberDrawing || blocked || !s.started;
   const last = s.members.filter(m => !m.fixed && m.remaining === 1 && !s.clear);
   $('peelLast').replaceChildren(...last.map(m => line('p', `${m.name}님 막판!`, 'peel-last-name')));
   $('peelLast').hidden = !last.length;
@@ -160,7 +170,7 @@ $('peelSupportForm').onsubmit = e => {
   roundDraft = null; knownActive.clear(); commit({type:'member',name,remaining,fixed});
   $('peelSupportResult').textContent = `${name}님 · ${fixed ? '고정참가 ∞' : remaining + '판'} 저장했어요.`;
 };
-$('peelSupport').onclick = () => openMemberDraw($('peelName').value.trim());
+$('peelSupport').onclick = () => openMemberDraw('', '판수 룰렛');
 $('peelName').oninput = () => $('peelName').setCustomValidity('');
 function selectEditor(settings, focus = false) {
   ['peelPlayTab','peelSettingsTab'].forEach((id,i) => { $(id).setAttribute('aria-selected',String(Boolean(i) === settings)); $(id).tabIndex = Boolean(i) === settings ? 0 : -1; });
@@ -173,8 +183,9 @@ for (const id of ['peelPlayTab','peelSettingsTab']) $(id).onkeydown = e => {
   if (['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) { e.preventDefault(); selectEditor(e.key === 'End' || (e.key !== 'Home' && id === 'peelPlayTab'), true); }
 };
 $('peelAddPlayer').onclick = () => openMemberDraw();
-function openMemberDraw(name = '') {
+function openMemberDraw(name = '', title = '새 멤버 추가') {
   if (busy || memberDrawing || blocked || summarize(state).clear) return;
+  $('peelMemberTitle').textContent = title;
   $('peelNewName').value = name; $('peelNewName').disabled = false; $('peelNewName').setCustomValidity('');
   $('peelMemberResult').textContent = '';
   $('peelMemberDraw').hidden = false; $('peelMemberDraw').disabled = false;
@@ -215,10 +226,23 @@ $('peelRoundForm').onsubmit = async e => {
   roundDraft = null; knownActive.clear(); render();
   $('peelEquation').textContent = fmt(s.remaining) + ' − ' + kills + ' = ' + fmt(summarize(state).remaining) + '킬';
 };
+$('peelResetRounds').onclick = () => {
+  if (busy || memberDrawing || blocked || !summarize(state).started) return;
+  $('peelProgressResetDialog').returnValue = '';
+  $('peelProgressResetDialog').showModal();
+};
+$('peelProgressResetDialog').addEventListener('close', () => {
+  if ($('peelProgressResetDialog').returnValue !== 'confirm' || busy || memberDrawing || blocked) return;
+  state = resetPeelProgress(state); roundDraft = null; knownActive.clear();
+  displayedTarget = null; spinPhase = 'idle'; $('peelCurrent').classList.remove('counting','target-land');
+  $('peelSupportResult').textContent = ''; save(); render(); notice('판 기록을 초기화했어요.');
+});
 window.addEventListener('storage', e => {
   if (e.key !== PEEL_KEY) return;
+  if ($('peelProgressResetDialog').open) $('peelProgressResetDialog').close('cancel');
   try { const incoming = e.newValue ? validatePeel(JSON.parse(e.newValue)) : emptyPeel(); generation++; spinPhase = 'idle'; wakeReel?.(); busy = false; memberDrawing = false; $('peelMemberDialog').close(); displayedTarget = null; $('peelCurrent').classList.remove('counting'); blocked = false; state = incoming; roundDraft = null; knownActive.clear(); document.querySelectorAll('.peel-reel').forEach(el=>el.classList.remove('rolling')); render(); $('peelEquation').textContent = '다른 창의 기록을 반영했어요.'; }
   catch { notice('다른 창의 기록을 읽지 못했어요.'); }
 });
 window.addEventListener('beforeunload', e => { if (busy || memberDrawing || failed) { e.preventDefault(); e.returnValue = ''; } });
+new ResizeObserver(() => paintTarget(displayedTarget ?? summarize(state).remaining)).observe($('peelCurrent').parentElement);
 render();

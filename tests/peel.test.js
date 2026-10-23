@@ -1,9 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {emptyPeel, randomInt, calculate, summarize, validatePeel} from '../peel-model.js';
+import {emptyPeel, randomInt, calculate, summarize, validatePeel, resetPeelProgress} from '../peel-model.js';
 const spin = (operand = 100, op = '+') => ({type:'spin',operand,op});
 const support = (name,rounds,fixed = false) => ({type:'support',name,rounds,fixed});
 const round = kills => ({type:'round',kills});
+test('전체 판 초기화는 진행 기록을 비우고 멤버와 현재 참가 설정을 보존한다', () => {
+  const state={version:1,events:[spin(),{type:'member',name:'A',remaining:999,fixed:false},support('A',5),support('고정',0,true),{type:'round',kills:101,players:[{name:'A',kills:100},{name:'고정',kills:1}]}]};
+  const before=JSON.stringify(state), reset=resetPeelProgress(state), s=summarize(validatePeel(reset));
+  assert.equal(JSON.stringify(state),before); assert.equal(s.remaining,'0'); assert.equal(s.started,false); assert.equal(s.clear,false); assert.equal(s.rounds,0); assert.equal(s.kills,0); assert.equal(s.history.length,0);
+  assert.equal(s.members[0].remaining,1003); assert.equal(s.members[0].personalKills,0); assert.equal(s.members[0].rounds,0); assert.equal(s.members[1].fixed,true);
+});
 test('첫 슬롯은 숫자를 대입하고 이후 사칙연산과 정수 나눗셈을 적용한다', () => {
   assert.equal(summarize({events:[spin(20,'×')]}).remaining,'20');
   assert.equal(calculate('70','+',20),'90'); assert.equal(calculate('70','−',20),'50');

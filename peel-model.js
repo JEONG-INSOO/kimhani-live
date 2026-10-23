@@ -1,6 +1,15 @@
 export const PEEL_KEY = 'kimhani-kill-peel-v1';
 export const OPS = ['+', '−', '×', '÷'];
 export const emptyPeel = () => ({version: 1, events: []});
+export function resetPeelProgress(state) {
+  const next = emptyPeel();
+  for (const m of summarize(state).members) {
+    const remaining = Math.min(999,m.remaining);
+    next.events.push({type:'member',name:m.name,remaining,fixed:m.fixed});
+    for (let extra = m.remaining-remaining; extra > 0; extra -= 5) next.events.push({type:'support',name:m.name,rounds:Math.min(5,extra),fixed:false});
+  }
+  return next;
+}
 export function randomInt(min, max, rng = Math.random) { return min + Math.floor(rng() * (max - min + 1)); }
 export function calculate(value, op, operand) {
   const a = BigInt(value), b = BigInt(operand);
