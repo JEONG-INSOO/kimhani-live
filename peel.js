@@ -5,6 +5,34 @@ let skipRequested = false, wakeReel = null, memberDrawing = false, spinPhase = '
 try { const saved = localStorage.getItem(PEEL_KEY); if (saved) state = validatePeel(JSON.parse(saved)); }
 catch { blocked = true; }
 function notice(text) { $('peelNotice').textContent = text; $('peelNotice').hidden = !text; }
+const PRICE_KEY = 'kimhani-kill-peel-price-v1';
+let slotPrice = '100';
+try { const saved = localStorage.getItem(PRICE_KEY); if (saved !== null && /^[0-9]{1,6}$/.test(saved)) slotPrice = String(Number(saved)); } catch {}
+function paintPrice() { $('peelPrice').value = slotPrice; sizePrice(); }
+function sizePrice() { $('peelPrice').style.width = Math.max(3.3,$('peelPrice').value.length+.3) + 'ch'; }
+function persistPrice() { try { localStorage.setItem(PRICE_KEY, slotPrice); } catch { notice('슬롯 단가를 저장하지 못했어요. 브라우저 저장 공간을 확인해주세요.'); } }
+function savePrice() {
+  const value = $('peelPrice').value.trim();
+  if (!/^[0-9]{1,6}$/.test(value)) { paintPrice(); notice('슬롯 단가는 0~999999 사이의 정수로 입력해주세요.'); return; }
+  slotPrice = String(Number(value)); paintPrice();
+  persistPrice();
+}
+paintPrice();
+let priceBeforeEdit = slotPrice;
+$('peelPrice').onfocus = () => { priceBeforeEdit = slotPrice; };
+$('peelPrice').oninput = () => {
+  sizePrice();
+  if (/^[0-9]{1,6}$/.test($('peelPrice').value)) { slotPrice = String(Number($('peelPrice').value)); persistPrice(); }
+};
+$('peelPrice').onblur = savePrice;
+$('peelPrice').onkeydown = e => {
+  if (e.key === 'Enter') { e.preventDefault(); savePrice(); $('peelPrice').blur(); }
+  if (e.key === 'Escape') { e.preventDefault(); slotPrice = priceBeforeEdit; paintPrice(); persistPrice(); $('peelPrice').blur(); }
+};
+window.addEventListener('storage', e => {
+  if (e.key !== PRICE_KEY) return;
+  if (e.newValue === null || /^[0-9]{1,6}$/.test(e.newValue)) { slotPrice = e.newValue === null ? '100' : String(Number(e.newValue)); paintPrice(); }
+});
 function commit(event) {
   if (blocked) return;
   state.events.push(event);
