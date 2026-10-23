@@ -12,9 +12,9 @@
   <script type="module" src="./app.js?v=24"></script>
   <link rel="stylesheet" href="./bingo.css?v=22">
   <script type="module" src="./bingo.js?v=23"></script>
-  <link rel="stylesheet" href="./peel.css?v=23">
+  <link rel="stylesheet" href="./peel.css?v=25">
   <script type="module" src="./navigation.js?v=23"></script>
-  <script type="module" src="./peel.js?v=23"></script>
+  <script type="module" src="./peel.js?v=25"></script>
 </head>
 <body>
   <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
@@ -75,28 +75,34 @@
         <div class="peel-left-side">
           <div class="peel-hero" id="peelHero">
             <div class="peel-hero-header"><span>KILL CHALLENGE</span><span>✧ 킬까기</span></div>
-            <h2>남은 목표 킬</h2><div class="peel-number" id="peelCurrent" aria-live="polite">000</div><p class="peel-total" id="peelTotals">0판 · 총 0킬</p>
+            <h2>남은 목표 킬</h2><div class="peel-number" id="peelCurrent" aria-live="polite">000</div>
+            <div class="peel-spin-area">
+              <button type="button" class="primary peel-spin" id="peelSpin">✦ 킬 슬롯 돌리기</button>
+              <div class="peel-reels" id="peelReels" role="button" tabindex="0" aria-label="추첨 건너뛰고 결과 바로 보기" title="클릭하면 바로 결과 공개" hidden><div id="peelOperator" class="peel-reel peel-op">?</div><div id="peelHundreds" class="peel-reel">0</div><div id="peelTens" class="peel-reel">0</div><div id="peelOnes" class="peel-reel">0</div></div>
+            </div>
+            <p class="peel-equation" id="peelEquation" hidden>첫 숫자는 20~100</p>
             <div class="mission peel-mission" id="peelMission" role="status" hidden><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span aria-hidden="true">✦</span><strong>MISSION CLEAR</strong></div>
           </div>
           <div class="peel-last" id="peelLast" role="status" hidden></div>
-          <div class="peel-slot">
-            <div class="peel-slot-heading"><span>LUCKY KILL SLOT</span><small>20 ~ 100</small></div>
-            <div class="peel-reels" aria-label="킬 추첨 슬롯"><div id="peelOperator" class="peel-reel peel-op">?</div><div id="peelHundreds" class="peel-reel">0</div><div id="peelTens" class="peel-reel">0</div><div id="peelOnes" class="peel-reel">0</div></div>
-            <p class="peel-equation" id="peelEquation" role="status">첫 숫자는 20~100</p>
-            <button type="button" class="primary peel-spin" id="peelSpin">✦ 킬 슬롯 돌리기</button>
-            <p class="peel-slot-note">0은 계속 진행 · 음수가 되면 미션 클리어 · 나눗셈은 소수점 버림</p>
-          </div>
+          <p class="peel-slot-note">0은 계속 진행 · 음수가 되면 미션 클리어 · 나눗셈은 소수점 버림</p>
         </div>
         <div class="peel-right-side">
-          <section class="peel-card"><span class="eyebrow">PLAY TOGETHER</span><h3>함께하는 사람</h3>
-            <form id="peelSupportForm"><label for="peelName">후원자 이름</label><div class="peel-name-row"><input type="text" id="peelName" maxlength="30" required placeholder="이름을 입력해주세요" autocomplete="off"><label class="peel-fixed-label"><input type="checkbox" id="peelFixed">고정참가</label></div><button type="submit" class="primary" id="peelSupport">판수 뽑아 추가 <span>0 ~ 5</span></button></form>
-            <p class="peel-support-result" id="peelSupportResult" role="status"></p><div id="peelMembers"></div>
-          </section>
-          <section class="peel-card"><span class="eyebrow">MATCH RESULT</span><h3>이번 판 기록</h3><form id="peelRoundForm"><label for="peelKills">이번 판 킬</label><div class="peel-record-row"><input id="peelKills" type="number" min="0" max="10000" step="1" required placeholder="0" inputmode="numeric"><button type="submit" class="primary" id="peelRecord">경기 저장 <span>✓</span></button></div></form><p class="peel-round-note">저장하면 목표 킬과 참가자의 남은 판수가 함께 줄어요.</p><div class="peel-actions"><button type="button" class="reset" id="peelUndo">↶ 마지막 입력 취소</button><button type="button" class="reset" id="peelReset">새 킬까기</button></div></section>
+          <section class="peel-card peel-editor">
+              <div class="peel-editor-tabs" role="tablist" aria-label="킬까기 입력 메뉴"><button type="button" id="peelPlayTab" role="tab" aria-selected="true" aria-controls="peelPlayPanel">✎ 판 입력</button><button type="button" id="peelSettingsTab" role="tab" aria-selected="false" aria-controls="peelSettingsPanel" tabindex="-1">⚙ 멤버 설정</button></div>
+              <div id="peelPlayPanel" role="tabpanel" aria-labelledby="peelPlayTab"><section class="peel-match-entry"><div class="peel-match-heading"><h3 id="peelRoundHeading">1번째 판</h3><button type="button" id="peelAddPlayer" class="peel-add">+ 이름 추가</button></div><form id="peelRoundForm"><div class="peel-input-labels"><span>이름</span><span>킬</span></div><div id="peelRoundPlayers"></div><datalist id="peelPlayerNames"></datalist><div class="peel-save-row"><span>합계 <strong id="peelRoundTotal">0킬</strong></span><button type="submit" class="primary" id="peelRecord">저장하고 다음 판 <span>↗</span></button></div></form><p class="peel-round-note">이번 판에 함께한 이름만 남겨주세요 · 저장하면 각 1판 차감</p><div class="peel-actions"><button type="button" class="reset" id="peelUndo">↶ 마지막 입력 취소</button><button type="button" class="reset" id="peelReset">새 킬까기</button></div></section></div>
+              <div id="peelSettingsPanel" role="tabpanel" aria-labelledby="peelSettingsTab" hidden>
+                <span class="eyebrow">PLAY TOGETHER</span><h3>멤버 설정</h3>
+                <form id="peelSupportForm"><label for="peelName">멤버 이름</label><div class="peel-name-row"><input type="text" id="peelName" maxlength="30" required placeholder="이름을 입력해주세요" autocomplete="off" list="peelPlayerNames"><label class="peel-fixed-label"><input type="checkbox" id="peelFixed">고정참가</label></div>
+                  <div class="peel-setting-rounds"><label for="peelRounds">남은 판수</label><input type="number" id="peelRounds" min="0" max="999" step="1" value="1" required><button type="submit" class="primary" id="peelSaveMember">멤버 저장</button></div>
+                  <button type="button" class="peel-donation" id="peelSupport">✦ 후원 판수 뽑아 추가 <span>0 ~ 5</span></button>
+                </form>
+                <p class="peel-support-result" id="peelSupportResult" role="status"></p><div id="peelMembers"></div>
+              </div>
+            </section>
           <p id="peelNotice" class="peel-notice" role="status" hidden></p>
         </div>
       </div>
-      <section class="peel-summary"><div class="peel-summary-heading"><div><span class="eyebrow">OUR PLAY RECORD</span><h3>함께한 기록</h3></div><span aria-hidden="true">✧</span></div><div class="peel-table-wrap"><table><thead><tr><th scope="col">이름</th><th scope="col">함께한 판수</th><th scope="col">함께한 킬</th><th scope="col">참가 상태</th></tr></thead><tbody id="peelSummary"></tbody></table></div><p class="peel-empty" id="peelSummaryEmpty">함께한 순간이 여기에 쌓여요.</p><details class="peel-history"><summary>슬롯 · 경기 기록</summary><ol id="peelHistory"></ol></details></section>
+      <section class="peel-summary"><div class="peel-summary-heading"><div><span class="eyebrow">OUR PLAY RECORD</span><h3>함께한 기록</h3></div><span aria-hidden="true">✧</span></div><div class="peel-table-wrap"><table><thead><tr><th scope="col">이름</th><th scope="col">함께한 판수</th><th scope="col">함께한 킬</th><th scope="col">개인 킬</th><th scope="col">참가 상태</th></tr></thead><tbody id="peelSummary"></tbody></table></div><p class="peel-empty" id="peelSummaryEmpty">함께한 순간이 여기에 쌓여요.</p><details class="peel-history"><summary>슬롯 · 경기 기록</summary><ol id="peelHistory"></ol></details></section>
     </section>
     <footer class="page-footer"><span>MADE FOR KIMHANI</span></footer>
   </div>

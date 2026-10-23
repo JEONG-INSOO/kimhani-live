@@ -46,3 +46,31 @@ test('새로고침 기록을 보존하고 잘못된 입력과 종료 후 기록�
   const state={version:1,events:[spin(),support('A',3),round(5)]}; assert.deepEqual(validatePeel(JSON.parse(JSON.stringify(state))),state);
   for (const events of [[round(1)],[spin(19)],[spin(101)],[spin(),round(-1)],[spin(),round(1.2)],[support('',1)],[support('A',6)],[spin(20),round(21),round(1)]]) assert.throws(()=>validatePeel({version:1,events}));
 });
+test('개인 킬 합계를 한 번만 차감하고 실제 참가자의 판수만 줄인다', () => {
+  const state={version:1,events:[spin(),support('하니',2),support('잉수',1),support('대기',3),{type:'round',kills:7,players:[{name:'하니',kills:3},{name:'잉수',kills:4}]}]};
+  assert.deepEqual(validatePeel(state),state);
+  const s=summarize(state); assert.equal(s.remaining,'93'); assert.equal(s.rounds,1); assert.equal(s.kills,7);
+  const [a,b,c]=s.members; assert.equal(a.remaining,1); assert.equal(b.remaining,0); assert.equal(c.remaining,3);
+  assert.equal(a.personalKills,3); assert.equal(b.personalKills,4); assert.equal(a.kills,7); assert.equal(b.kills,7); assert.equal(c.rounds,0);
+});
+test('기존 공동 킬 기록은 보존하고 신규 개인 킬과 구분한다', () => {
+  const state={version:1,events:[spin(),support('하니',3),round(5),{type:'round',kills:2,players:[{name:'하니',kills:2}]}]};
+  const m=summarize(validatePeel(JSON.parse(JSON.stringify(state)))).members[0];
+  assert.equal(m.kills,7); assert.equal(m.personalKills,2); assert.equal(m.individualRounds,1); assert.equal(m.rounds,2);
+  state.events.pop(); assert.equal(summarize(state).members[0].remaining,2);
+});
+test('직접 입력한 이름의 기록과 0킬 참가도 저장한다', () => {
+  const state={version:1,events:[spin(),{type:'round',kills:3,players:[{name:'새 참가자',kills:3},{name:'0킬 참가',kills:0}]}]};
+  const s=summarize(validatePeel(state)); assert.equal(s.remaining,'97'); assert.equal(s.members[1].rounds,1); assert.equal(s.members[0].remaining,0);
+});
+test('중복 이름, 개인 킬 오류, 합계 불일치와 빈 명단을 거부한다', () => {
+  for (const players of [[],[{name:'A',kills:1},{name:' A ',kills:2}],[{name:'',kills:3}],[{name:'A',kills:-3}],[{name:'A',kills:1.5}],[{name:'A',kills:4}]]) assert.throws(()=>validatePeel({version:1,events:[spin(),{type:'round',kills:3,players}]}));
+});
+
+test('멤버 설정은 남은 판수를 지정하고 기존 킬 기록을 보존한다', () => {
+  const events=[spin(),{type:'member',name:'하니',remaining:2,fixed:false},{type:'round',kills:3,players:[{name:'하니',kills:3}]},{type:'member',name:'하니',remaining:5,fixed:true}];
+  const state=validatePeel({version:1,events}); const s=summarize(state);
+  assert.equal(s.remaining,'97'); assert.equal(s.members[0].remaining,5); assert.equal(s.members[0].personalKills,3); assert.equal(s.members[0].rounds,1); assert.equal(s.members[0].fixed,true);
+  state.events.pop(); assert.equal(summarize(state).members[0].remaining,1);
+  for (const remaining of [-1,1.5,1000]) assert.throws(()=>validatePeel({version:1,events:[{type:'member',name:'A',remaining,fixed:false}]}));
+});
