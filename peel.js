@@ -1,7 +1,7 @@
 import {PEEL_KEY, OPS, emptyPeel, randomInt, summarize, validatePeel} from './peel-model.js?v=25';
 const $ = id => document.getElementById(id), fmt = value => BigInt(value).toLocaleString('ko-KR');
 let state = emptyPeel(), busy = false, generation = 0, failed = false, blocked = false, displayedTarget = null, roundDraft = null, knownActive = new Set();
-let skipRequested = false, wakeReel = null, memberDrawing = false;
+let skipRequested = false, wakeReel = null, memberDrawing = false, spinPhase = 'idle', dismissResult = false;
 try { const saved = localStorage.getItem(PEEL_KEY); if (saved) state = validatePeel(JSON.parse(saved)); }
 catch { blocked = true; }
 function notice(text) { $('peelNotice').textContent = text; $('peelNotice').hidden = !text; }
@@ -42,7 +42,7 @@ function renderRoundInputs(s, locked) {
   });
   $('peelAddPlayer').disabled = locked || roundDraft.length >= 100; roundTotal();
 }
-async function applyAnimated(event, token) {
+async function applyAnimated(event, token, keepBusy = false) {
   const from = BigInt(summarize(state).remaining);
   busy = true; displayedTarget = String(from); state.events.push(event); save(); render();
   const to = BigInt(summarize(state).remaining), el = $('peelCurrent');
@@ -58,7 +58,7 @@ async function applyAnimated(event, token) {
     if (steps > 1) await sleep(20);
   }
   if (token !== generation) return;
-  displayedTarget = null; busy = false; el.classList.remove('counting'); el.classList.add('target-land'); render();
+  displayedTarget = null; busy = keepBusy; el.classList.remove('counting'); el.classList.add('target-land'); render();
 }
 function render() {
   const s = summarize(state), locked = busy || memberDrawing || s.clear || blocked;
@@ -69,7 +69,9 @@ function render() {
   $('peelMission').hidden = !s.clear || busy;
   $('peelSpin').disabled = locked;
   $('peelSpin').hidden = busy || s.clear;
-  $('peelReels').hidden = !busy || displayedTarget !== null && state.events.at(-1)?.type !== 'spin';
+  $('peelReels').hidden = spinPhase === 'idle';
+  $('peelReels').setAttribute('aria-label',spinPhase === 'result' ? '슬롯 결과 닫기' : '추첨 건너뛰고 결과 바로 보기');
+  $('peelReels').title = spinPhase === 'result' ? '클릭하면 결과 닫기' : '클릭하면 바로 결과 공개';
   $('peelSupport').disabled = locked;
   $('peelSaveMember').disabled = locked; $('peelRounds').disabled = locked;
   $('peelName').disabled = locked; $('peelFixed').disabled = locked;
@@ -127,19 +129,29 @@ async function roll(id, values, result, duration, token) {
 $('peelSpin').onclick = async () => {
   if (busy || memberDrawing || blocked || summarize(state).clear) return;
   const s = summarize(state), op = OPS[randomInt(0,3)], operand = randomInt(20,100), token = ++generation;
-  busy = true; skipRequested = false; notice(''); render();
+  busy = true; spinPhase = 'rolling'; skipRequested = false; dismissResult = false; notice(''); render();
   $('peelHundreds').textContent = '?'; $('peelTens').textContent = '?'; $('peelOnes').textContent = '?';
-  await roll('peelOperator',BigInt(s.remaining) === 0n ? ['='] : OPS,BigInt(s.remaining) === 0n ? '=' : op,2800,token);
+  await roll('peelOperator',BigInt(s.remaining) === 0n ? ['='] : OPS,BigInt(s.remaining) === 0n ? '=' : op,750,token);
   if (token !== generation) return;
   $('peelHundreds').textContent = operand === 100 ? '1' : '0';
-  await roll('peelTens',['0','1','2','3','4','5','6','7','8','9'],String(Math.floor(operand / 10) % 10),2300,token);
-  await roll('peelOnes',['0','1','2','3','4','5','6','7','8','9'],String(operand % 10),2900,token);
+  await roll('peelTens',['0','1','2','3','4','5','6','7','8','9'],String(Math.floor(operand / 10) % 10),750,token);
+  await roll('peelOnes',['0','1','2','3','4','5','6','7','8','9'],String(operand % 10),750,token);
   if (token !== generation) return;
-  await applyAnimated({type:'spin',op,operand}, token);
+  spinPhase = 'result'; const revealedAt = Date.now();
+  await applyAnimated({type:'spin',op,operand}, token, true);
   if (token !== generation) return;
+  if (!dismissResult) await new Promise(resolve => {
+    const timer = setTimeout(()=>{wakeReel=null;resolve();},Math.max(0,8000-(Date.now()-revealedAt)));
+    wakeReel = () => { clearTimeout(timer); wakeReel=null; resolve(); };
+  });
+  if (token !== generation) return;
+  spinPhase = 'idle'; busy = false; render();
   const next = summarize(state); $('peelEquation').textContent = BigInt(s.remaining) === 0n ? `새 목표 · ${operand}킬` : `${fmt(s.remaining)} ${op} ${operand} = ${fmt(next.remaining)}킬`;
 };
-$('peelReels').onclick = () => { if (busy && displayedTarget === null) { skipRequested = true; wakeReel?.(); } };
+$('peelReels').onclick = () => {
+  if (spinPhase === 'rolling') { skipRequested = true; wakeReel?.(); }
+  else if (spinPhase === 'result') { dismissResult = true; wakeReel?.(); }
+};
 $('peelReels').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('peelReels').click(); } };
 $('peelSupportForm').onsubmit = e => {
   e.preventDefault(); if (busy || memberDrawing || blocked || summarize(state).clear) return;
@@ -148,7 +160,7 @@ $('peelSupportForm').onsubmit = e => {
   roundDraft = null; knownActive.clear(); commit({type:'member',name,remaining,fixed});
   $('peelSupportResult').textContent = `${name}님 · ${fixed ? '고정참가 ∞' : remaining + '판'} 저장했어요.`;
 };
-$('peelSupport').onclick = () => openMemberDraw($('peelName').value.trim(),$('peelFixed').checked);
+$('peelSupport').onclick = () => openMemberDraw($('peelName').value.trim());
 $('peelName').oninput = () => $('peelName').setCustomValidity('');
 function selectEditor(settings, focus = false) {
   ['peelPlayTab','peelSettingsTab'].forEach((id,i) => { $(id).setAttribute('aria-selected',String(Boolean(i) === settings)); $(id).tabIndex = Boolean(i) === settings ? 0 : -1; });
@@ -161,10 +173,9 @@ for (const id of ['peelPlayTab','peelSettingsTab']) $(id).onkeydown = e => {
   if (['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) { e.preventDefault(); selectEditor(e.key === 'End' || (e.key !== 'Home' && id === 'peelPlayTab'), true); }
 };
 $('peelAddPlayer').onclick = () => openMemberDraw();
-function openMemberDraw(name = '', fixed = false) {
+function openMemberDraw(name = '') {
   if (busy || memberDrawing || blocked || summarize(state).clear) return;
   $('peelNewName').value = name; $('peelNewName').disabled = false; $('peelNewName').setCustomValidity('');
-  $('peelNewFixed').checked = fixed; $('peelNewFixed').disabled = false;
   $('peelMemberResult').textContent = '';
   $('peelMemberDraw').hidden = false; $('peelMemberDraw').disabled = false;
   $('peelMemberClose').disabled = false; $('peelMemberDone').hidden = true;
@@ -174,11 +185,11 @@ function openMemberDraw(name = '', fixed = false) {
 $('peelNewName').oninput = () => $('peelNewName').setCustomValidity('');
 $('peelMemberDrawForm').onsubmit = async e => {
   e.preventDefault(); if (busy || memberDrawing || blocked || summarize(state).clear) return;
-  const name = $('peelNewName').value.trim(), fixed = $('peelNewFixed').checked;
+  const name = $('peelNewName').value.trim(), fixed = false;
   if (!name) { $('peelNewName').setCustomValidity('이름을 입력해주세요.'); $('peelNewName').reportValidity(); return; }
   const rounds = randomInt(0,5), token = ++generation;
   memberDrawing = true; notice(''); render();
-  for (const id of ['peelNewName','peelNewFixed','peelMemberDraw','peelMemberClose']) $(id).disabled = true;
+  for (const id of ['peelNewName','peelMemberDraw','peelMemberClose']) $(id).disabled = true;
   const wheel = $('peelMemberWheel'), reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   void wheel.offsetWidth;
   wheel.style.transition = reduced ? 'none' : 'transform 3.2s cubic-bezier(.12,.74,.16,1)';
@@ -206,7 +217,7 @@ $('peelRoundForm').onsubmit = async e => {
 };
 window.addEventListener('storage', e => {
   if (e.key !== PEEL_KEY) return;
-  try { const incoming = e.newValue ? validatePeel(JSON.parse(e.newValue)) : emptyPeel(); generation++; busy = false; memberDrawing = false; $('peelMemberDialog').close(); displayedTarget = null; $('peelCurrent').classList.remove('counting'); blocked = false; state = incoming; roundDraft = null; knownActive.clear(); document.querySelectorAll('.peel-reel').forEach(el=>el.classList.remove('rolling')); render(); $('peelEquation').textContent = '다른 창의 기록을 반영했어요.'; }
+  try { const incoming = e.newValue ? validatePeel(JSON.parse(e.newValue)) : emptyPeel(); generation++; spinPhase = 'idle'; wakeReel?.(); busy = false; memberDrawing = false; $('peelMemberDialog').close(); displayedTarget = null; $('peelCurrent').classList.remove('counting'); blocked = false; state = incoming; roundDraft = null; knownActive.clear(); document.querySelectorAll('.peel-reel').forEach(el=>el.classList.remove('rolling')); render(); $('peelEquation').textContent = '다른 창의 기록을 반영했어요.'; }
   catch { notice('다른 창의 기록을 읽지 못했어요.'); }
 });
 window.addEventListener('beforeunload', e => { if (busy || memberDrawing || failed) { e.preventDefault(); e.returnValue = ''; } });

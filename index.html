@@ -12,9 +12,9 @@
   <script type="module" src="./app.js?v=24"></script>
   <link rel="stylesheet" href="./bingo.css?v=22">
   <script type="module" src="./bingo.js?v=23"></script>
-  <link rel="stylesheet" href="./peel.css?v=26">
+  <link rel="stylesheet" href="./peel.css?v=27">
   <script type="module" src="./navigation.js?v=23"></script>
-  <script type="module" src="./peel.js?v=26"></script>
+  <script type="module" src="./peel.js?v=27"></script>
 </head>
 <body>
   <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
@@ -25,13 +25,11 @@
       <div class="workspace">
         <section class="score-side" aria-label="실시간 점수판">
           <div class="hero" id="hero">
-            
             <div class="hero-content"><div class="score-block"><span class="goal-chip">목표 <strong id="target">70</strong><small>점</small></span><span class="caption" id="scoreCaption">현재 팀 점수</span><div class="score-number" id="current">0</div><div class="score-note" id="scoreNote" hidden>우리의 첫 하이라이트를 기다리는 중</div></div><div id="memberScores" class="member-scores" aria-label="멤버별 점수"></div></div>
             <div class="progress-info"><span id="progressLabel">목표까지</span><strong id="remaining">70점 남았어요</strong></div><div class="progress-track" role="progressbar" aria-label="목표 달성률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><i id="progressBar"></i></div>
             <div class="mission" id="mission" hidden><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span>✦</span><strong>MISSION CLEAR</strong><small>오늘도 화 안내기 성공!</small></div>
           </div>
           <div class="round-summary"><div class="summary-title"><span><i>✦</i> <b id="roundTitle">1번째 매치</b> 스코어</span><strong><span id="roundScore">0</span><small> 점</small></strong></div><div class="score-pills" id="scoreParts"></div></div>
-          
         </section>
         <section class="control-side" aria-label="경기 입력과 설정">
           <div class="tabs" role="tablist" aria-label="입력 메뉴"><button id="playTab" class="tab active" role="tab" aria-selected="true" aria-controls="playPanel">✎ <span>판 입력</span></button><button id="settingsTab" class="tab" role="tab" aria-selected="false" aria-controls="settingsPanel">⚙ <span>목표 / 멤버</span></button></div>
@@ -74,7 +72,7 @@
       <div class="peel-layout">
         <div class="peel-left-side">
           <div class="peel-hero" id="peelHero">
-            <div class="peel-hero-header"><span>KILL CHALLENGE</span><span>✧ 킬까기</span></div>
+            <div class="peel-last" id="peelLast" role="status" hidden></div><div class="peel-hero-header"><span>KILL CHALLENGE</span><span>✧ 킬까기</span></div>
             <h2>남은 목표 킬</h2><div class="peel-number" id="peelCurrent" aria-live="polite">000</div>
             <div class="peel-spin-area">
               <button type="button" class="primary peel-spin" id="peelSpin">✦ 킬 슬롯 돌리기</button>
@@ -83,7 +81,6 @@
             <p class="peel-equation" id="peelEquation" hidden>첫 숫자는 20~100</p>
             <div class="mission peel-mission" id="peelMission" role="status" hidden><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span aria-hidden="true">✦</span><strong>MISSION CLEAR</strong></div>
           </div>
-          <div class="peel-last" id="peelLast" role="status" hidden></div>
         </div>
         <div class="peel-right-side">
           <section class="peel-card peel-editor">
@@ -111,7 +108,7 @@
   <dialog id="peelMemberDialog" class="peel-member-dialog" aria-labelledby="peelMemberTitle">
     <button type="button" id="peelMemberClose" class="peel-dialog-close" aria-label="멤버 추가 닫기">×</button>
     <span class="eyebrow">WELCOME PLAYER</span><h2 id="peelMemberTitle">새 멤버 추가</h2>
-    <form id="peelMemberDrawForm"><label for="peelNewName">참가할 사람 이름</label><div class="peel-name-row"><input id="peelNewName" type="text" maxlength="30" required autocomplete="off" placeholder="이름을 입력해주세요" list="peelPlayerNames"><label class="peel-fixed-label"><input id="peelNewFixed" type="checkbox">고정참가</label></div>
+    <form id="peelMemberDrawForm"><label for="peelNewName">참가할 사람 이름</label><div class="peel-name-row"><input id="peelNewName" type="text" maxlength="30" required autocomplete="off" placeholder="이름을 입력해주세요" list="peelPlayerNames"></div>
     <div class="peel-roulette" aria-hidden="true"><span class="peel-roulette-pointer"></span><div id="peelMemberWheel" class="peel-member-wheel"><span style="--sector:0">0</span><span style="--sector:1">1</span><span style="--sector:2">2</span><span style="--sector:3">3</span><span style="--sector:4">4</span><span style="--sector:5">5</span></div><span class="peel-roulette-hub">✦</span></div>
     <p id="peelMemberResult" class="peel-member-result" role="status"></p><button type="submit" id="peelMemberDraw" class="primary">뽑기 <span>0 ~ 5판</span></button></form>
     <button type="button" id="peelMemberDone" class="primary" hidden>완료</button>
