@@ -12,7 +12,7 @@
   <script type="module" src="./app.js?v=24"></script>
   <link rel="stylesheet" href="./bingo.css?v=22">
   <script type="module" src="./bingo.js?v=23"></script>
-  <link rel="stylesheet" href="./peel.css?v=29">
+  <link rel="stylesheet" href="./peel.css?v=30">
   <script type="module" src="./navigation.js?v=23"></script>
   <script type="module" src="./peel.js?v=29"></script>
 </head>
@@ -72,12 +72,12 @@
       <div class="peel-layout">
         <div class="peel-left-side">
           <div class="peel-hero" id="peelHero"><div id="peelTargetView">
-            <div class="peel-last" id="peelLast" role="status" hidden></div><div class="peel-hero-header"><span>KILL CHALLENGE</span><span>✧ 킬까기</span></div>
+            <div class="peel-hero-header"><span>KILL CHALLENGE</span><span>✧ 킬까기</span></div>
             <h2>남은 목표 킬</h2><div class="peel-number-frame"><div class="peel-number" id="peelCurrent" aria-live="polite">000</div></div>
-            <div class="peel-spin-area">
+            <div class="peel-action-row"><div class="peel-spin-area">
               <button type="button" id="peelSpinBroken" class="peel-breakdown" aria-label="슬롯 고장 결과 닫기" hidden><strong>슬롯고장!</strong><span>다음 기회에</span></button><button type="button" class="primary peel-spin" id="peelSpin">✦ 킬 슬롯 돌리기</button>
               <div class="peel-reels" id="peelReels" role="button" tabindex="0" aria-label="추첨 건너뛰고 결과 바로 보기" title="클릭하면 바로 결과 공개" hidden><div id="peelOperator" class="peel-reel peel-op">?</div><div id="peelHundreds" class="peel-reel">0</div><div id="peelTens" class="peel-reel">0</div><div id="peelOnes" class="peel-reel">0</div></div>
-            </div>
+            </div><div class="peel-last" id="peelLast" role="status" hidden></div></div>
             <p class="peel-equation" id="peelEquation" hidden>첫 숫자는 20~100</p>
             <div class="mission peel-mission" id="peelMission" role="status" hidden><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span aria-hidden="true">✦</span><strong>MISSION CLEAR</strong></div>
           </div><section id="peelMemberPanel" class="peel-member-panel" aria-labelledby="peelMemberTitle" hidden>

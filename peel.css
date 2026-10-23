@@ -81,3 +81,15 @@
 @media(max-width:800px){.peel-layout{grid-template-columns:1fr}.peel-hero{min-height:310px}}
 @media(max-width:400px){.peel-member-panel{padding:17px 14px}.peel-inline-outcome{gap:9px;grid-template-columns:150px minmax(0,1fr)}.peel-inline-result p{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.peel-spin-area>.peel-breakdown{animation:none}}
+
+/* Keep the target centered above a lower action row and right-hand last-round names. */
+.peel-number-frame{height:120px;min-height:120px}
+.peel-action-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(82px,.36fr);gap:16px;align-items:center;min-height:96px;margin-top:18px}
+.peel-action-row .peel-spin-area{margin:0;justify-self:center}
+.peel-action-row .peel-last{position:static;inset:auto;display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-end;justify-content:center;gap:5px;min-width:0;opacity:.55}
+.peel-action-row .peel-last[hidden]{display:none}
+.peel-action-row .peel-last-name{width:100%;max-width:100%;text-align:right;font-size:12px;line-height:1.45;animation:lastRoundFloat 4.6s ease-in-out infinite}
+.peel-action-row .peel-spin{font-size:16px;padding-left:10px;padding-right:10px}
+@media(max-width:800px){.peel-number-frame{height:110px;min-height:110px}.peel-action-row{margin-top:18px;gap:12px}}
+@media(max-width:480px){.peel-action-row{grid-template-columns:minmax(0,1fr) 82px;gap:10px}.peel-action-row .peel-spin{font-size:14px}.peel-action-row .peel-reels{gap:4px;padding:7px}.peel-action-row .peel-reel{font-size:30px}.peel-action-row .peel-op{font-size:38px;margin-right:0}.peel-action-row .peel-last-name{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.peel-action-row .peel-last-name{animation:none}}
