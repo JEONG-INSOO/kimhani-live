@@ -12,9 +12,9 @@
   <script type="module" src="./app.js?v=24"></script>
   <link rel="stylesheet" href="./bingo.css?v=22">
   <script type="module" src="./bingo.js?v=23"></script>
-  <link rel="stylesheet" href="./peel.css?v=28">
+  <link rel="stylesheet" href="./peel.css?v=29">
   <script type="module" src="./navigation.js?v=23"></script>
-  <script type="module" src="./peel.js?v=28"></script>
+  <script type="module" src="./peel.js?v=29"></script>
 </head>
 <body>
   <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
@@ -71,16 +71,20 @@
     <section class="studio peel-studio" id="peelStudio" role="tabpanel" aria-labelledby="peelGameTab" hidden>
       <div class="peel-layout">
         <div class="peel-left-side">
-          <div class="peel-hero" id="peelHero">
+          <div class="peel-hero" id="peelHero"><div id="peelTargetView">
             <div class="peel-last" id="peelLast" role="status" hidden></div><div class="peel-hero-header"><span>KILL CHALLENGE</span><span>✧ 킬까기</span></div>
             <h2>남은 목표 킬</h2><div class="peel-number-frame"><div class="peel-number" id="peelCurrent" aria-live="polite">000</div></div>
             <div class="peel-spin-area">
-              <button type="button" class="primary peel-spin" id="peelSpin">✦ 킬 슬롯 돌리기</button>
+              <button type="button" id="peelSpinBroken" class="peel-breakdown" aria-label="슬롯 고장 결과 닫기" hidden><strong>슬롯고장!</strong><span>다음 기회에</span></button><button type="button" class="primary peel-spin" id="peelSpin">✦ 킬 슬롯 돌리기</button>
               <div class="peel-reels" id="peelReels" role="button" tabindex="0" aria-label="추첨 건너뛰고 결과 바로 보기" title="클릭하면 바로 결과 공개" hidden><div id="peelOperator" class="peel-reel peel-op">?</div><div id="peelHundreds" class="peel-reel">0</div><div id="peelTens" class="peel-reel">0</div><div id="peelOnes" class="peel-reel">0</div></div>
             </div>
             <p class="peel-equation" id="peelEquation" hidden>첫 숫자는 20~100</p>
             <div class="mission peel-mission" id="peelMission" role="status" hidden><div class="mission-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><span aria-hidden="true">✦</span><strong>MISSION CLEAR</strong></div>
-          </div>
+          </div><section id="peelMemberPanel" class="peel-member-panel" aria-labelledby="peelMemberTitle" hidden>
+  <div class="peel-inline-heading"><h2 id="peelMemberTitle">판수 룰렛</h2><button type="button" id="peelMemberClose" class="peel-inline-close" aria-label="판수 룰렛 닫기">×</button></div>
+  <form id="peelMemberDrawForm"><label for="peelNewName">참가할 사람 이름</label><div class="peel-inline-input"><input id="peelNewName" type="text" maxlength="30" required autocomplete="off" placeholder="이름을 입력해주세요" list="peelPlayerNames"><button type="submit" id="peelMemberDraw" class="primary">뽑기</button></div></form>
+  <div class="peel-inline-outcome"><div class="peel-roulette" aria-hidden="true"><span class="peel-roulette-pointer"></span><div id="peelMemberWheel" class="peel-member-wheel"><span style="--sector:0">0</span><span style="--sector:1">1</span><span style="--sector:2">2</span><span style="--sector:3">3</span><span style="--sector:4">4</span><span style="--sector:5">5</span></div><span class="peel-roulette-hub">✦</span></div><div class="peel-inline-result"><p id="peelMemberResult" role="status">0 ~ 5판</p><button type="button" id="peelMemberDone" class="primary" hidden>완료</button></div></div>
+</section></div>
         </div>
         <div class="peel-right-side">
           <section class="peel-card peel-editor">
@@ -104,14 +108,7 @@
   <dialog id="resetDialog"><form method="dialog"><span class="dialog-star">✦</span><h2>새로운 경기를 시작할까요?</h2><p>목표 점수와 멤버 설정를 제외한 모든 판의 기록이 지워집니다.</p><div class="dialog-actions"><button value="cancel" class="reset">계속 플레이</button><button value="confirm" class="primary">기록 초기화</button></div></form></dialog>
   <div id="toast" class="toast" role="status" hidden></div>
   <dialog id="bingoResetDialog"><form method="dialog"><span class="dialog-star">✦</span><h2>새 빙고를 시작할까요?</h2><p id="bingoResetDescription"></p><div class="dialog-actions"><button value="cancel" class="reset" autofocus>계속 플레이</button><button value="confirm" class="primary">새로 시작</button></div></form></dialog>
-  <dialog id="peelMemberDialog" class="peel-member-dialog" aria-labelledby="peelMemberTitle">
-    <button type="button" id="peelMemberClose" class="peel-dialog-close" aria-label="멤버 추가 닫기">×</button>
-    <span class="eyebrow">WELCOME PLAYER</span><h2 id="peelMemberTitle">새 멤버 추가</h2>
-    <form id="peelMemberDrawForm"><label for="peelNewName">참가할 사람 이름</label><div class="peel-name-row"><input id="peelNewName" type="text" maxlength="30" required autocomplete="off" placeholder="이름을 입력해주세요" list="peelPlayerNames"></div>
-    <div class="peel-roulette" aria-hidden="true"><span class="peel-roulette-pointer"></span><div id="peelMemberWheel" class="peel-member-wheel"><span style="--sector:0">0</span><span style="--sector:1">1</span><span style="--sector:2">2</span><span style="--sector:3">3</span><span style="--sector:4">4</span><span style="--sector:5">5</span></div><span class="peel-roulette-hub">✦</span></div>
-    <p id="peelMemberResult" class="peel-member-result" role="status"></p><button type="submit" id="peelMemberDraw" class="primary">뽑기 <span>0 ~ 5판</span></button></form>
-    <button type="button" id="peelMemberDone" class="primary" hidden>완료</button>
-  </dialog>
+
 <dialog id="peelProgressResetDialog" aria-labelledby="peelProgressResetTitle"><form method="dialog"><span class="dialog-star">✦</span><h2 id="peelProgressResetTitle">모든 판 기록을 초기화할까요?</h2><p>목표 킬은 000으로 돌아가고, 슬롯·경기 기록과 누적 킬·판수가 모두 지워집니다.<br>멤버 이름·고정참가·현재 남은 판수는 유지됩니다.</p><div class="dialog-actions"><button value="cancel" class="reset" autofocus>기록 유지</button><button value="confirm" class="primary">전체 판 초기화</button></div></form></dialog>
 </body>
 </html>

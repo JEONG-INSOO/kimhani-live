@@ -3,14 +3,24 @@ export const OPS = ['+', '−', '×', '÷'];
 export const emptyPeel = () => ({version: 1, events: []});
 export function resetPeelProgress(state) {
   const next = emptyPeel();
-  for (const m of summarize(state).members) {
+  const members = summarize(state).members;
+  for (const m of [...members].sort((a,b) => Number(a.waiting)-Number(b.waiting) || a.queueOrder-b.queueOrder)) {
     const remaining = Math.min(999,m.remaining);
     next.events.push({type:'member',name:m.name,remaining,fixed:m.fixed});
     for (let extra = m.remaining-remaining; extra > 0; extra -= 5) next.events.push({type:'support',name:m.name,rounds:Math.min(5,extra),fixed:false});
   }
+  for (const m of members.filter(m=>m.waiting).sort((a,b)=>a.queueOrder-b.queueOrder)) next.events.push({type:'waiting',name:m.name,waiting:true});
   return next;
 }
 export function randomInt(min, max, rng = Math.random) { return min + Math.floor(rng() * (max - min + 1)); }
+export function drawKillSlot(rng = Math.random) {
+  if (rng() < .01) return null;
+  return {type:'spin',op:OPS[randomInt(0,3,rng)],operand:randomInt(20,100,rng)};
+}
+export function drawMemberRounds(name, rng = Math.random) {
+  if (rng() < .01) return null;
+  return {type:'support',name,rounds:randomInt(0,5,rng),fixed:false};
+}
 export function calculate(value, op, operand) {
   const a = BigInt(value), b = BigInt(operand);
   if (op === '=') return String(b);
@@ -23,29 +33,54 @@ export function calculate(value, op, operand) {
 export function summarize(state) {
   let remaining = '0', started = false, rounds = 0, kills = 0;
   const members = new Map(), history = [];
+  let queueClock = 0;
+  const eligible = m => m.fixed || m.remaining > 0;
+  const active = () => [...members.values()].filter(m => eligible(m) && !m.waiting);
+  const admit = m => {
+    if (!eligible(m)) { m.waiting = false; return; }
+    if (!m.waiting && active().length > 4) { m.waiting = true; m.queueOrder = ++queueClock; }
+  };
+  const promote = () => {
+    for (const m of [...members.values()].filter(m=>eligible(m) && m.waiting).sort((a,b)=>a.queueOrder-b.queueOrder)) {
+      if (active().length >= 4) break;
+      m.waiting = false;
+    }
+  };
   const member = name => {
-    if (!members.has(name)) members.set(name, {name, remaining: 0, fixed: false, rounds: 0, kills: 0, granted: 0, personalKills: 0, individualRounds: 0});
+    if (!members.has(name)) members.set(name, {name, remaining: 0, fixed: false, waiting: false, queueOrder: 0, rounds: 0, kills: 0, granted: 0, personalKills: 0, individualRounds: 0});
     return members.get(name);
   };
   for (const event of state.events) {
     if (event.type === 'support') {
       const m = member(event.name); m.remaining += event.rounds; m.granted += event.rounds;
       if (event.fixed) m.fixed = true;
+      admit(m);
     } else if (event.type === 'member') {
       const m = member(event.name); m.remaining = event.remaining; m.fixed = event.fixed;
-    } else if (event.type === 'fixed') member(event.name).fixed = event.fixed;
+      admit(m); if (!eligible(m)) promote();
+    } else if (event.type === 'fixed') {
+      const m = member(event.name); m.fixed = event.fixed; admit(m); if (!eligible(m)) promote();
+    } else if (event.type === 'waiting') {
+      const m = member(event.name);
+      if (event.waiting && eligible(m)) { m.waiting = true; m.queueOrder = ++queueClock; }
+      else if (!event.waiting && active().length < 4) m.waiting = false;
+    }
     else if (event.type === 'spin') {
       const before = remaining, op = BigInt(remaining) === 0n ? '=' : event.op;
       remaining = calculate(remaining, op, event.operand); started = true;
       history.push({type: 'spin', before, op, operand: event.operand, after: remaining});
     } else if (event.type === 'round') {
-      const participants = event.players ? event.players.map(p => member(p.name)) : [...members.values()].filter(m => m.fixed || m.remaining > 0);
+      // Legacy rounds had no player list or four-person cap. Preserve their totals.
+      const participants = event.players ? event.players.map(p => member(p.name)) : [...members.values()].filter(eligible);
+      const opensSeat = participants.some(m=>!m.waiting && !m.fixed && m.remaining === 1);
       for (const m of participants) {
         m.rounds++; m.kills += event.kills; if (!m.fixed && m.remaining > 0) m.remaining--;
+        if (!eligible(m)) m.waiting = false;
         if (event.players) { m.personalKills += event.players.find(p => p.name === m.name).kills; m.individualRounds++; }
       }
       remaining = String(BigInt(remaining) - BigInt(event.kills)); rounds++; kills += event.kills;
       history.push({type: 'round', round: rounds, kills: event.kills, names: participants.map(m => m.name), players: event.players, after: remaining});
+      if (opensSeat) promote();
     }
   }
   return {remaining, started, clear: BigInt(remaining) < 0n, rounds, kills, members: [...members.values()], history};
@@ -54,6 +89,7 @@ export function validatePeel(raw) {
   if (!raw || raw.version !== 1 || !Array.isArray(raw.events)) throw new Error('잘못된 킬까기 기록');
   const events = raw.events.map(e => {
     if (!e || typeof e !== 'object') throw new Error('잘못된 기록');
+    if (e.type === 'waiting' && typeof e.name === 'string' && e.name.trim() && e.name.length <= 30 && typeof e.waiting === 'boolean') return {type:'waiting',name:e.name.trim(),waiting:e.waiting};
     if (e.type === 'spin' && OPS.includes(e.op) && Number.isInteger(e.operand) && e.operand >= 20 && e.operand <= 100) return {type:e.type,op:e.op,operand:e.operand};
     if (e.type === 'round' && Number.isInteger(e.kills) && e.kills >= 0 && e.kills <= 10000) {
       if (e.players === undefined) return {type:e.type,kills:e.kills};

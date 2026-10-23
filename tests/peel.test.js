@@ -1,9 +1,58 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {emptyPeel, randomInt, calculate, summarize, validatePeel, resetPeelProgress} from '../peel-model.js';
+import {emptyPeel, randomInt, calculate, summarize, validatePeel, resetPeelProgress, drawKillSlot, drawMemberRounds} from '../peel-model.js';
 const spin = (operand = 100, op = '+') => ({type:'spin',operand,op});
 const support = (name,rounds,fixed = false) => ({type:'support',name,rounds,fixed});
 const round = kills => ({type:'round',kills});
+const saveActive = state => state.events.push({type:'round',kills:0,players:summarize(state).members.filter(m=>!m.waiting&&(m.fixed||m.remaining>0)).map(m=>({name:m.name,kills:0}))});
+test('두 추첨은 1% 구간에서 고장나고 정상 구간의 끝값을 포함한다', () => {
+  for (const draw of [drawKillSlot, rng=>drawMemberRounds('A',rng)]) {
+    let faults=0;
+    for (let i=0;i<100;i++) if(draw(()=>(i+.5)/100) === null) faults++;
+    assert.equal(faults,1); assert.equal(draw(()=>.009999),null); assert.notEqual(draw(()=>.01),null);
+  }
+  const seq = values => () => values.shift();
+  assert.deepEqual(drawKillSlot(seq([.01,0,0])),spin(20,'+'));
+  assert.deepEqual(drawKillSlot(seq([.99,.999,.999])),spin(100,'÷'));
+  assert.deepEqual(drawMemberRounds('A',seq([.01,0])),support('A',0));
+  assert.deepEqual(drawMemberRounds('A',seq([.99,.999])),support('A',5));
+});
+test('4명 초과는 대기하고 마지막 판 종료 후 대기 순서대로 합류한다', () => {
+  const state={version:1,events:[spin(),...['A','B','C','D','E','F'].map(n=>support(n,n==='A'?1:3))]};
+  let s=summarize(state); assert.deepEqual(s.members.filter(m=>m.waiting).map(m=>m.name),['E','F']);
+  state.events.push({type:'round',kills:4,players:['A','B','C','D'].map(name=>({name,kills:1}))});
+  s=summarize(validatePeel(state));
+  assert.deepEqual(s.members.filter(m=>!m.waiting&&m.remaining>0).map(m=>m.name),['B','C','D','E']);
+  assert.equal(s.members[4].remaining,3); assert.equal(s.members[4].rounds,0); assert.equal(s.members[5].remaining,3);
+  saveActive(state); s=summarize(state); assert.equal(s.members[4].remaining,2); assert.equal(s.members[5].remaining,3);
+});
+test('대기 체크, 수동 합류, 고정참가도 4명 제한과 저장을 지킨다', () => {
+  const state={version:1,events:[spin(),...['A','B','C','D','E'].map(n=>support(n,2,true)),{type:'waiting',name:'E',waiting:false}]};
+  assert.equal(summarize(state).members[4].waiting,true);
+  state.events.push({type:'waiting',name:'A',waiting:true},{type:'waiting',name:'E',waiting:false});
+  let s=summarize(validatePeel(JSON.parse(JSON.stringify(state))));
+  assert.equal(s.members[0].waiting,true); assert.equal(s.members[4].waiting,false);
+  saveActive(state); s=summarize(state); assert.equal(s.members[0].rounds,0); assert.equal(s.members[4].rounds,1); assert.equal(s.members[4].remaining,2);
+  const reset=summarize(validatePeel(resetPeelProgress(state))); assert.deepEqual(reset.members.filter(m=>m.waiting).map(m=>m.name),['A']);
+});
+test('동시에 여러 자리가 나면 대기를 순서대로 채우며 0판은 합류하지 않는다', () => {
+  const state={version:1,events:[spin(),...['A','B','C','D'].map(n=>support(n,1)),support('영',0),support('E',2),support('F',2)]};
+  saveActive(state);
+  const s=summarize(state); assert.deepEqual(s.members.filter(m=>!m.waiting&&m.remaining>0).map(m=>m.name),['E','F']);
+  assert.equal(s.members[5].rounds,0); assert.equal(s.members[5].remaining,2);
+});
+test('수동 대기는 체크를 풀거나 참가자가 종료될 때까지 판수를 보존한다', () => {
+  const state={version:1,events:[spin(),support('A',3),support('B',3),{type:'waiting',name:'B',waiting:true}]};
+  saveActive(state);
+  let s=summarize(state); assert.equal(s.members[1].waiting,true); assert.equal(s.members[1].remaining,3);
+  state.events.push({type:'waiting',name:'B',waiting:false}); saveActive(state); s=summarize(state);
+  assert.equal(s.members[1].waiting,false); assert.equal(s.members[1].remaining,2);
+});
+test('4인 제한 이전 참가자 명단이 없는 기록의 킬과 판수도 보존한다', () => {
+  const state={version:1,events:[spin(),...['A','B','C','D','E'].map(n=>support(n,3)),round(5)]};
+  const s=summarize(validatePeel(state));
+  assert.equal(s.members[4].kills,5); assert.equal(s.members[4].remaining,2); assert.equal(s.members[4].waiting,true);
+});
 test('전체 판 초기화는 진행 기록을 비우고 멤버와 현재 참가 설정을 보존한다', () => {
   const state={version:1,events:[spin(),{type:'member',name:'A',remaining:999,fixed:false},support('A',5),support('고정',0,true),{type:'round',kills:101,players:[{name:'A',kills:100},{name:'고정',kills:1}]}]};
   const before=JSON.stringify(state), reset=resetPeelProgress(state), s=summarize(validatePeel(reset));
