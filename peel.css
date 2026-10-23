@@ -100,3 +100,6 @@
 .peel-action-row .peel-last{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) var(--slot-width) minmax(0,1fr);align-content:center;align-items:center;gap:9px 8px;pointer-events:none}
 .peel-action-row .peel-last-name{grid-column:1;text-align:left;white-space:normal;overflow:visible;font-size:clamp(10px,2.3cqw,12px);line-height:1.5}
 .peel-action-row .peel-last-name:nth-child(even){grid-column:3;text-align:right}
+
+.peel-price{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid #cfadc0;border-radius:9px;background:#fff8eb;color:#70445d;font-size:14px;font-weight:700;line-height:1.2;letter-spacing:0;box-shadow:0 2px 6px #75445f12;white-space:nowrap}
+.peel-price strong{font-size:19px;color:#8b365f;font-weight:900}
