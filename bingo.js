@@ -10,21 +10,6 @@ function save() {
   $('bingoSave').textContent = saveFailed ? '저장하지 못했어요 · 이 화면을 닫기 전에 확인해주세요.' : '';
   $('bingoSave').hidden = !saveFailed;
 }
-function switchGame(name, focus = false) {
-  for (const game of ['kill', 'bingo']) {
-    const active = game === name, tab = $(game + 'GameTab');
-    tab.setAttribute('aria-selected', String(active)); tab.tabIndex = active ? 0 : -1;
-    $(game === 'kill' ? 'studio' : 'bingoStudio').hidden = !active;
-  }
-  if (focus) $(name + 'GameTab').focus();
-}
-$('killGameTab').onclick = () => switchGame('kill');
-$('bingoGameTab').onclick = () => switchGame('bingo');
-$('gameTabs').onkeydown = e => {
-  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-  e.preventDefault();
-  switchGame(e.key === 'Home' ? 'kill' : e.key === 'End' ? 'bingo' : $('bingoStudio').hidden ? 'bingo' : 'kill', true);
-};
 function paintCell(cell, index, stats, animate = false) {
   const checked = board().checked[index];
   cell.classList.toggle('is-checked', checked); cell.classList.toggle('is-line', stats.winning.has(index));
