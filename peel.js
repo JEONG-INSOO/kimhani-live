@@ -1,7 +1,7 @@
 import {PEEL_KEY, OPS, emptyPeel, randomInt, summarize, validatePeel} from './peel-model.js?v=25';
 const $ = id => document.getElementById(id), fmt = value => BigInt(value).toLocaleString('ko-KR');
 let state = emptyPeel(), busy = false, generation = 0, failed = false, blocked = false, displayedTarget = null, roundDraft = null, knownActive = new Set();
-let skipRequested = false, wakeReel = null;
+let skipRequested = false, wakeReel = null, memberDrawing = false;
 try { const saved = localStorage.getItem(PEEL_KEY); if (saved) state = validatePeel(JSON.parse(saved)); }
 catch { blocked = true; }
 function notice(text) { $('peelNotice').textContent = text; $('peelNotice').hidden = !text; }
@@ -27,12 +27,12 @@ function renderRoundInputs(s, locked) {
     if (blank) blank.name = name; else roundDraft.push({name,kills:''});
   }
   knownActive = new Set(active);
-  if (!roundDraft.length) roundDraft.push({name:'',kills:''});
+
   $('peelRoundPlayers').replaceChildren();
   $('peelPlayerNames').replaceChildren(...s.members.map(m=>{ const opt = document.createElement('option'); opt.value = m.name; return opt; }));
   roundDraft.forEach((player,index)=>{
     const row = line('div','','peel-player-input'), name = document.createElement('input'), kills = document.createElement('input'), remove = line('button','×','peel-remove');
-    name.type = 'text'; name.maxLength = 30; name.value = player.name; name.placeholder = '함께한 이름'; name.setAttribute('list','peelPlayerNames'); name.setAttribute('aria-label',`${index+1}번 참가자 이름`); name.disabled = locked;
+    name.type = 'text'; name.maxLength = 30; name.value = player.name; name.placeholder = '함께한 이름'; name.setAttribute('list','peelPlayerNames'); name.setAttribute('aria-label',`${index+1}번 참가자 이름`); name.disabled = locked; name.readOnly = true;
     kills.type = 'number'; kills.min = 0; kills.max = 10000; kills.step = 1; kills.inputMode = 'numeric'; kills.placeholder = '0'; kills.value = player.kills; kills.setAttribute('aria-label',`${index+1}번 참가자 킬`); kills.disabled = locked;
     name.oninput = () => player.name = name.value;
     kills.oninput = () => { player.kills = kills.value; roundTotal(); };
@@ -61,7 +61,7 @@ async function applyAnimated(event, token) {
   displayedTarget = null; busy = false; el.classList.remove('counting'); el.classList.add('target-land'); render();
 }
 function render() {
-  const s = summarize(state), locked = busy || s.clear || blocked;
+  const s = summarize(state), locked = busy || memberDrawing || s.clear || blocked;
   const shown = displayedTarget ?? s.remaining;
   $('peelCurrent').textContent = shown === '0' ? '000' : fmt(shown);
   $('peelCurrent').classList.toggle('peel-long', shown.length > 7);
@@ -72,19 +72,15 @@ function render() {
   $('peelReels').hidden = !busy || displayedTarget !== null && state.events.at(-1)?.type !== 'spin';
   $('peelSupport').disabled = locked;
   $('peelSaveMember').disabled = locked; $('peelRounds').disabled = locked;
-  $('peelRoundHeading').textContent = `${s.rounds + 1}번째 판`;
   $('peelName').disabled = locked; $('peelFixed').disabled = locked;
-  $('peelRecord').disabled = locked || !s.started;
-  $('peelUndo').disabled = busy || blocked || !state.events.length;
-  $('peelReset').disabled = busy || blocked || !state.events.length;
   renderRoundInputs(s, locked);
+  $('peelRecord').disabled = locked || !s.started || !roundDraft.length;
   const last = s.members.filter(m => !m.fixed && m.remaining === 1 && !s.clear);
   $('peelLast').replaceChildren(...last.map(m => line('p', `${m.name}님 막판!`, 'peel-last-name')));
   $('peelLast').hidden = !last.length;
-  const active = s.members.filter(m => m.fixed || m.remaining > 0);
   $('peelMembers').replaceChildren();
-  if (!active.length) $('peelMembers').append(line('p', '함께할 이름을 추가해주세요.', 'peel-empty'));
-  for (const m of active) {
+  if (!s.members.length) $('peelMembers').append(line('p', '함께할 이름을 추가해주세요.', 'peel-empty'));
+  for (const m of s.members) {
     const row = line('div', '', 'peel-member'), info = line('div', '', 'peel-member-info');
     info.append(line('b', m.name), line('small', `${m.rounds}판 함께 · ${fmt(m.kills)}킬`));
     const fixed = line('label', '', 'peel-fixed-label'), input = document.createElement('input'); input.type = 'checkbox'; input.checked = m.fixed; input.disabled = locked; input.setAttribute('aria-label', `${m.name} 고정참가`);
@@ -94,7 +90,7 @@ function render() {
     row.append(info, fixed, line('strong', m.fixed ? '∞' : `${m.remaining}판`, 'peel-left'), edit); $('peelMembers').append(row);
   }
   $('peelSummary').replaceChildren();
-  for (const m of s.members.filter(m => m.rounds || m.granted || m.fixed || m.remaining)) {
+  for (const m of s.members) {
     const row = document.createElement('tr');
     row.append(line('th',m.name),line('td',`${m.rounds}판`),line('td',`${fmt(m.kills)}킬`),line('td',m.individualRounds ? `${fmt(m.personalKills)}킬` : '—'),line('td',s.clear ? '미션 종료' : m.fixed ? '고정참가' : m.remaining ? `${m.remaining}판 남음` : '참여 완료')); row.firstChild.scope = 'row'; $('peelSummary').append(row);
   }
@@ -129,7 +125,7 @@ async function roll(id, values, result, duration, token) {
   el.textContent = result; el.classList.remove('rolling'); el.classList.remove('landed'); void el.offsetWidth; el.classList.add('landed');
 }
 $('peelSpin').onclick = async () => {
-  if (busy || blocked || summarize(state).clear) return;
+  if (busy || memberDrawing || blocked || summarize(state).clear) return;
   const s = summarize(state), op = OPS[randomInt(0,3)], operand = randomInt(20,100), token = ++generation;
   busy = true; skipRequested = false; notice(''); render();
   $('peelHundreds').textContent = '?'; $('peelTens').textContent = '?'; $('peelOnes').textContent = '?';
@@ -146,19 +142,13 @@ $('peelSpin').onclick = async () => {
 $('peelReels').onclick = () => { if (busy && displayedTarget === null) { skipRequested = true; wakeReel?.(); } };
 $('peelReels').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('peelReels').click(); } };
 $('peelSupportForm').onsubmit = e => {
-  e.preventDefault(); if (busy || blocked || summarize(state).clear) return;
+  e.preventDefault(); if (busy || memberDrawing || blocked || summarize(state).clear) return;
   const name = $('peelName').value.trim(), remaining = Number($('peelRounds').value), fixed = $('peelFixed').checked;
   if (!name || !Number.isInteger(remaining) || remaining < 0 || remaining > 999) return;
   roundDraft = null; knownActive.clear(); commit({type:'member',name,remaining,fixed});
   $('peelSupportResult').textContent = `${name}님 · ${fixed ? '고정참가 ∞' : remaining + '판'} 저장했어요.`;
 };
-$('peelSupport').onclick = e => {
-  e.preventDefault(); if (busy || blocked || summarize(state).clear) return;
-  const name = $('peelName').value.trim(); if (!name) { $('peelName').setCustomValidity('이름을 입력해주세요.'); $('peelName').reportValidity(); return; }
-  const rounds = randomInt(0,5), fixed = $('peelFixed').checked;
-  commit({type:'support',name,rounds,fixed});
-  $('peelSupportResult').textContent = `${name}님 +${rounds}판${fixed ? ' · 고정참가 ∞' : rounds === 0 ? ' · 이번에는 추가 판수 없어요' : ''}`;
-};
+$('peelSupport').onclick = () => openMemberDraw($('peelName').value.trim(),$('peelFixed').checked);
 $('peelName').oninput = () => $('peelName').setCustomValidity('');
 function selectEditor(settings, focus = false) {
   ['peelPlayTab','peelSettingsTab'].forEach((id,i) => { $(id).setAttribute('aria-selected',String(Boolean(i) === settings)); $(id).tabIndex = Boolean(i) === settings ? 0 : -1; });
@@ -170,12 +160,40 @@ $('peelSettingsTab').onclick = () => selectEditor(true);
 for (const id of ['peelPlayTab','peelSettingsTab']) $(id).onkeydown = e => {
   if (['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) { e.preventDefault(); selectEditor(e.key === 'End' || (e.key !== 'Home' && id === 'peelPlayTab'), true); }
 };
-$('peelAddPlayer').onclick = () => {
-  if (busy || blocked || summarize(state).clear || roundDraft.length >= 100) return;
-  roundDraft.push({name:'',kills:''}); renderRoundInputs(summarize(state),false); $('peelRoundPlayers').lastElementChild.querySelector('input').focus();
+$('peelAddPlayer').onclick = () => openMemberDraw();
+function openMemberDraw(name = '', fixed = false) {
+  if (busy || memberDrawing || blocked || summarize(state).clear) return;
+  $('peelNewName').value = name; $('peelNewName').disabled = false; $('peelNewName').setCustomValidity('');
+  $('peelNewFixed').checked = fixed; $('peelNewFixed').disabled = false;
+  $('peelMemberResult').textContent = '';
+  $('peelMemberDraw').hidden = false; $('peelMemberDraw').disabled = false;
+  $('peelMemberClose').disabled = false; $('peelMemberDone').hidden = true;
+  $('peelMemberWheel').style.transition = 'none'; $('peelMemberWheel').style.transform = 'rotate(0deg)';
+  $('peelMemberDialog').showModal(); $('peelNewName').focus();
+}
+$('peelNewName').oninput = () => $('peelNewName').setCustomValidity('');
+$('peelMemberDrawForm').onsubmit = async e => {
+  e.preventDefault(); if (busy || memberDrawing || blocked || summarize(state).clear) return;
+  const name = $('peelNewName').value.trim(), fixed = $('peelNewFixed').checked;
+  if (!name) { $('peelNewName').setCustomValidity('이름을 입력해주세요.'); $('peelNewName').reportValidity(); return; }
+  const rounds = randomInt(0,5), token = ++generation;
+  memberDrawing = true; notice(''); render();
+  for (const id of ['peelNewName','peelNewFixed','peelMemberDraw','peelMemberClose']) $(id).disabled = true;
+  const wheel = $('peelMemberWheel'), reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  void wheel.offsetWidth;
+  wheel.style.transition = reduced ? 'none' : 'transform 3.2s cubic-bezier(.12,.74,.16,1)';
+  wheel.style.transform = `rotate(${1800-rounds*60}deg)`;
+  await sleep(reduced ? 0 : 3200);
+  if (token !== generation) return;
+  memberDrawing = false; commit({type:'support',name,rounds,fixed});
+  $('peelMemberResult').textContent = `${name}님 +${rounds}판${fixed ? ' · 고정참가 ∞' : ''}`;
+  $('peelSupportResult').textContent = `${name}님 +${rounds}판 · 멤버에 등록했어요.`;
+  $('peelMemberDraw').hidden = true; $('peelMemberClose').disabled = false; $('peelMemberDone').hidden = false; $('peelMemberDone').focus();
 };
+$('peelMemberClose').onclick = $('peelMemberDone').onclick = () => { if (!memberDrawing) $('peelMemberDialog').close(); };
+$('peelMemberDialog').addEventListener('cancel', e => { if (memberDrawing) e.preventDefault(); });
 $('peelRoundForm').onsubmit = async e => {
-  e.preventDefault(); const s = summarize(state); if (busy || blocked || s.clear || !s.started) return;
+  e.preventDefault(); const s = summarize(state); if (busy || memberDrawing || blocked || s.clear || !s.started) return;
   const players = roundDraft.filter(p => p.name.trim() || p.kills !== '').map(p => ({name:p.name.trim(),kills:p.kills === '' ? 0 : Number(p.kills)}));
   const kills = players.reduce((n,p)=>n+p.kills,0);
   try { validatePeel({version:1,events:[...state.events,{type:'round',kills,players}]}); }
@@ -186,17 +204,10 @@ $('peelRoundForm').onsubmit = async e => {
   roundDraft = null; knownActive.clear(); render();
   $('peelEquation').textContent = fmt(s.remaining) + ' − ' + kills + ' = ' + fmt(summarize(state).remaining) + '킬';
 };
-$('peelUndo').onclick = () => { if (busy || blocked || !state.events.length) return; state.events.pop(); roundDraft = null; knownActive.clear(); save(); render(); $('peelEquation').textContent = '마지막 입력을 취소했어요.'; $('peelSupportResult').textContent = ''; };
-$('peelReset').onclick = () => $('peelResetDialog').showModal();
-$('peelResetDialog').addEventListener('close', () => {
-  if ($('peelResetDialog').returnValue !== 'confirm') return;
-  state = emptyPeel(); roundDraft = null; knownActive.clear(); save(); render(); $('peelEquation').textContent = '첫 숫자는 20~100'; $('peelSupportResult').textContent = '';
-  $('peelOperator').textContent = '?'; for (const id of ['peelHundreds','peelTens','peelOnes']) $(id).textContent = '0';
-});
 window.addEventListener('storage', e => {
   if (e.key !== PEEL_KEY) return;
-  try { const incoming = e.newValue ? validatePeel(JSON.parse(e.newValue)) : emptyPeel(); generation++; busy = false; displayedTarget = null; $('peelCurrent').classList.remove('counting'); blocked = false; state = incoming; roundDraft = null; knownActive.clear(); document.querySelectorAll('.peel-reel').forEach(el=>el.classList.remove('rolling')); render(); $('peelEquation').textContent = '다른 창의 기록을 반영했어요.'; }
+  try { const incoming = e.newValue ? validatePeel(JSON.parse(e.newValue)) : emptyPeel(); generation++; busy = false; memberDrawing = false; $('peelMemberDialog').close(); displayedTarget = null; $('peelCurrent').classList.remove('counting'); blocked = false; state = incoming; roundDraft = null; knownActive.clear(); document.querySelectorAll('.peel-reel').forEach(el=>el.classList.remove('rolling')); render(); $('peelEquation').textContent = '다른 창의 기록을 반영했어요.'; }
   catch { notice('다른 창의 기록을 읽지 못했어요.'); }
 });
-window.addEventListener('beforeunload', e => { if (busy || failed) { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', e => { if (busy || memberDrawing || failed) { e.preventDefault(); e.returnValue = ''; } });
 render();
