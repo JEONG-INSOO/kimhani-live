@@ -1,4 +1,4 @@
-import {BINGO_KEY, newState, newBoard, boardKey, progress, validateBingo} from './bingo-model.js?v=35';
+import {BINGO_KEY, newState, newBoard, boardKey, progress, validateBingo, shuffledLabels} from './bingo-model.js?v=36';
 const $ = id => document.getElementById(id);
 let state = newState(), editing = false, dismissed = false, saveFailed = false, pendingAction;
 try { const saved = localStorage.getItem(BINGO_KEY); if (saved) state = validateBingo(JSON.parse(saved)); }
@@ -65,13 +65,13 @@ $('bingoEdit').onclick = () => { editing = !editing; render(); };
 $('bingoContinue').onclick = () => { dismissed = true; update(); $('bingoGrid').querySelector('button')?.focus(); };
 function resetBoard(shuffle) {
   const current = board(); current.checked.fill(false);
-  if (shuffle) for (let i = current.labels.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [current.labels[i], current.labels[j]] = [current.labels[j], current.labels[i]]; }
+  if (shuffle) current.labels = shuffledLabels(current, state.size, state.mode);
   dismissed = false; render(); save();
 }
 function requestReset(shuffle) {
   if (!board().checked.some(Boolean)) { resetBoard(shuffle); return; }
   pendingAction = shuffle;
-  $('bingoResetDescription').textContent = shuffle ? '현재 빙고판의 체크를 지우고 글자 위치를 섞어요. 수정한 글자는 유지돼요.' : '현재 빙고판의 체크만 지워요. 글자와 다른 빙고판은 그대로 유지돼요.';
+  $('bingoResetDescription').textContent = shuffle ? '현재 체크를 지우고 다시 섞어요. 3×3·4×4 기본 알파벳은 A~Z에서 새로 뽑고, 직접 수정한 글자는 유지돼요.' : '현재 빙고판의 체크만 지워요. 글자와 다른 빙고판은 그대로 유지돼요.';
   $('bingoResetDialog').showModal();
 }
 $('bingoReset').onclick = () => requestReset(false);

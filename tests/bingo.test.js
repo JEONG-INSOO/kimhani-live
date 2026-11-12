@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {alphabet, newBoard, newState, progress, validateBingo, SIZES} from '../bingo-model.js';
+import {alphabet, newBoard, newState, progress, validateBingo, SIZES, shuffledLabels} from '../bingo-model.js';
 test('모든 크기의 기본 글자와 숫자는 중복 없이 생성된다', () => {
   for (const size of SIZES) for (const mode of ['alphabet', 'number']) {
     const b = newBoard(size, mode); assert.equal(b.labels.length, size * size); assert.equal(new Set(b.labels).size, size * size); assert.equal(progress(b, size).clear, false);
@@ -61,4 +61,16 @@ test('저장된 U는 체크를 보존해 복구하고 재로딩해도 중복이 
   assert.equal(fixed.boards['5-alphabet'].checked[20],true);
   assert.equal(new Set(fixed.boards['5-alphabet'].labels).size,25);
   assert.deepEqual(validateBingo(fixed),fixed);
+});
+
+test('기존 A~I 판에서 글자 섞기는 전체 풀에서 다시 추첨한다', () => {
+  for(const size of [3,4]) {
+    const old={labels:Array.from({length:size*size},(_,i)=>alphabet(i)),checked:Array(size*size).fill(false)};
+    const seen=new Set();
+    for(let i=0;i<200;i++) { const labels=shuffledLabels(old,size,'alphabet'); assert.equal(new Set(labels).size,size*size); labels.forEach(x=>seen.add(x)); }
+    assert.equal(seen.size,25); assert.ok(seen.has('Z')); assert.ok(seen.has('Q/U')); assert.ok(!seen.has('U'));
+    const raw=newState();raw.boards[size+'-alphabet']=old;assert.equal(validateBingo(raw).boards[size+'-alphabet'].labels.length,size*size);
+    old.labels[0]='하니';assert.deepEqual([...shuffledLabels(old,size,'alphabet')].sort(),[...old.labels].sort());
+    old.checked[0]=true;assert.deepEqual(validateBingo(raw).boards[size+'-alphabet'].checked,old.checked);
+  }
 });

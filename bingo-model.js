@@ -16,6 +16,15 @@ export function newBoard(size, mode) {
   }
   return { labels: Array.from({length: size * size}, (_, i) => size !== 10 && mode === 'alphabet' ? pool[i] : String(i + 1)), checked: Array(size * size).fill(false) };
 }
+export function shuffledLabels(board, size, mode) {
+  if ([3,4].includes(size) && mode === 'alphabet' && board.labels.every(label => LETTERS.includes(label))) return newBoard(size, mode).labels;
+  let labels = [...board.labels];
+  for (let i = labels.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [labels[i], labels[j]] = [labels[j], labels[i]];
+  }
+  return labels;
+}
 export function newState() { return { size: 3, mode: 'alphabet', boards: {} }; }
 export function boardKey(size, mode) { return `${size}-${mode}`; }
 export function progress(board, size) {
@@ -36,7 +45,7 @@ export function validateBingo(raw) {
     const key = boardKey(size, mode), board = raw.boards[key];
     if (!board) continue;
     if (!Array.isArray(board.labels) || board.labels.length !== size * size || board.labels.some(x => typeof x !== 'string' || !x.trim() || x.length > 12) || !Array.isArray(board.checked) || board.checked.length !== size * size || board.checked.some(x => typeof x !== 'boolean')) throw new Error('Invalid bingo board');
-    const labels = [...board.labels];
+    let labels = [...board.labels];
     if (size !== 10 && mode === 'alphabet') {
       let hasPair = labels.includes('Q/U');
       for (let i = 0; i < labels.length; i++) {
@@ -45,6 +54,8 @@ export function validateBingo(raw) {
         else { labels[i] = ['Z', ...LETTERS].find(letter => !labels.includes(letter)); }
       }
     }
+    const legacySmall = [3,4].includes(size) && mode === 'alphabet' && !board.checked.some(Boolean) && labels.every((label, i) => label === alphabet(i));
+    if (legacySmall) labels = newBoard(size, mode).labels;
     state.boards[key] = {labels: labels.map((label, i) => size === 10 && mode === 'number' ? (/^\d+$/.test(label) ? label : String(i + 1)) : label), checked: [...board.checked]};
   }
   return state;
