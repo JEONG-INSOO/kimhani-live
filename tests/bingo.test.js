@@ -32,10 +32,10 @@ test('손상된 저장 값을 거부한다', () => {
 });
 
 test('Q/U와 숫자 전용 100빙고, 이전 기록의 목표를 마이그레이션한다', () => {
-  assert.equal(newBoard(5,'alphabet').labels[16], 'Q/U');
+  for (const size of [3,4,5]) { const labels = newBoard(size,'alphabet').labels; assert.ok(labels.every(x => x === 'Q/U' || /^[A-PR-TV-Z]$/.test(x))); if(size === 5) { assert.ok(labels.includes('Z')); assert.ok(labels.includes('Q/U')); } }
   assert.equal(newBoard(10,'alphabet').labels[16], '17');
   const old = newState(); old.size=10; old.mode='alphabet';
-  old.boards['5-alphabet']=newBoard(5,'alphabet'); old.boards['5-alphabet'].labels[16]='Q'; old.boards['5-alphabet'].checked[16]=true; old.boards['5-alphabet'].goal=1;
+  old.boards['5-alphabet']=newBoard(5,'alphabet'); old.boards['5-alphabet'].labels=Array.from({length:25},(_,i)=>alphabet(i)); old.boards['5-alphabet'].checked[16]=true; old.boards['5-alphabet'].goal=1;
   old.boards['10-number']=newBoard(10,'number'); old.boards['10-number'].checked[0]=true;
-  const next=validateBingo(old); assert.equal(next.mode,'number'); assert.equal(next.boards['5-alphabet'].labels[16],'Q/U'); assert.equal(next.boards['5-alphabet'].checked[16],true); assert.equal(next.boards['10-number'].checked[0],true); assert.equal('goal' in next.boards['5-alphabet'],false);
+  const next=validateBingo(old); assert.equal(next.mode,'number'); assert.equal(next.boards['5-alphabet'].labels[20],'Z'); assert.equal(next.boards['5-alphabet'].labels[16],'Q/U'); assert.equal(next.boards['5-alphabet'].checked[16],true); assert.equal(next.boards['10-number'].checked[0],true); assert.equal('goal' in next.boards['5-alphabet'],false);
 });

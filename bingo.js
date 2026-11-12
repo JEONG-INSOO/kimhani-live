@@ -47,7 +47,7 @@ function render() {
     const cell = document.createElement(editing ? 'div' : 'button'); cell.className = 'bingo-cell';
     if (editing) {
       const input = document.createElement('input'); input.type = 'text'; input.value = label; input.maxLength = 12; input.setAttribute('aria-label', `${index + 1}번 칸 글자`);
-      input.onchange = () => { const value = input.value.trim(); current.labels[index] = value && (state.size !== 10 || /^\d+$/.test(value)) ? (state.size !== 10 && state.mode === 'alphabet' && value === 'Q' ? 'Q/U' : value) : current.labels[index]; input.value = current.labels[index]; save(); };
+      input.onchange = () => { const value = input.value.trim(); current.labels[index] = value && (state.size !== 10 || /^\d+$/.test(value)) ? (state.size !== 10 && state.mode === 'alphabet' && ['Q','U'].includes(value.toUpperCase()) ? 'Q/U' : value) : current.labels[index]; input.value = current.labels[index]; save(); };
       input.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); input.blur(); $('bingoEdit').focus(); } };
       cell.append(input);
     } else {
