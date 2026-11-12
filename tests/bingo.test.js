@@ -32,10 +32,33 @@ test('손상된 저장 값을 거부한다', () => {
 });
 
 test('Q/U와 숫자 전용 100빙고, 이전 기록의 목표를 마이그레이션한다', () => {
-  assert.equal(newBoard(5,'alphabet').labels[16], 'Q/U');
+  for (const size of [3,4,5]) { const labels = newBoard(size,'alphabet').labels; assert.ok(labels.every(x => x === 'Q/U' || /^[A-PR-TV-Z]$/.test(x))); if(size === 5) { assert.ok(labels.includes('Z')); assert.ok(labels.includes('Q/U')); } }
   assert.equal(newBoard(10,'alphabet').labels[16], '17');
   const old = newState(); old.size=10; old.mode='alphabet';
-  old.boards['5-alphabet']=newBoard(5,'alphabet'); old.boards['5-alphabet'].labels[16]='Q'; old.boards['5-alphabet'].checked[16]=true; old.boards['5-alphabet'].goal=1;
+  old.boards['5-alphabet']=newBoard(5,'alphabet'); old.boards['5-alphabet'].labels=Array.from({length:25},(_,i)=>alphabet(i)); old.boards['5-alphabet'].checked[16]=true; old.boards['5-alphabet'].goal=1;
   old.boards['10-number']=newBoard(10,'number'); old.boards['10-number'].checked[0]=true;
-  const next=validateBingo(old); assert.equal(next.mode,'number'); assert.equal(next.boards['5-alphabet'].labels[16],'Q/U'); assert.equal(next.boards['5-alphabet'].checked[16],true); assert.equal(next.boards['10-number'].checked[0],true); assert.equal('goal' in next.boards['5-alphabet'],false);
+  const next=validateBingo(old); assert.equal(next.mode,'number'); assert.equal(next.boards['5-alphabet'].labels[20],'Z'); assert.equal(next.boards['5-alphabet'].labels[16],'Q/U'); assert.equal(next.boards['5-alphabet'].checked[16],true); assert.equal(next.boards['10-number'].checked[0],true); assert.equal('goal' in next.boards['5-alphabet'],false);
+});
+
+test('알파벳 풀은 Q/U와 Z를 포함한 25개이며 작은 판도 전체 풀에서 뽑는다', () => {
+  const seen = new Set();
+  for (const size of [3,4,5]) {
+    for (let run=0; run<100; run++) {
+      const b = newBoard(size,'alphabet');
+      assert.equal(new Set(b.labels).size,size*size);
+      assert.ok(!b.labels.includes('Q') && !b.labels.includes('U'));
+      b.labels.forEach(x=>seen.add(x));
+      if(size===5) { assert.ok(b.labels.includes('Q/U')); assert.ok(b.labels.includes('Z')); }
+    }
+  }
+  assert.equal(seen.size,25);
+});
+test('저장된 U는 체크를 보존해 복구하고 재로딩해도 중복이 생기지 않는다', () => {
+  const state=newState(); const b=newBoard(5,'alphabet'); b.labels=Array.from({length:25},(_,i)=>alphabet(i)); b.labels[16]='Q/U'; b.checked[20]=true;
+  state.boards['5-alphabet']=b;
+  const fixed=validateBingo(state);
+  assert.equal(fixed.boards['5-alphabet'].labels[20],'Z');
+  assert.equal(fixed.boards['5-alphabet'].checked[20],true);
+  assert.equal(new Set(fixed.boards['5-alphabet'].labels).size,25);
+  assert.deepEqual(validateBingo(fixed),fixed);
 });

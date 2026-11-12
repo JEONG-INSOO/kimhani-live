@@ -5,8 +5,16 @@ export function alphabet(index) {
   for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26)) label = String.fromCharCode(65 + (n - 1) % 26) + label;
   return label;
 }
+export const LETTERS = [...'ABCDEFGHIJKLMNOPQRSTVWXYZ'].map(letter => letter === 'Q' ? 'Q/U' : letter);
 export function newBoard(size, mode) {
-  return { labels: Array.from({length: size * size}, (_, i) => size !== 10 && mode === 'alphabet' ? (alphabet(i) === 'Q' ? 'Q/U' : alphabet(i)) : String(i + 1)), checked: Array(size * size).fill(false) };
+  const pool = [...LETTERS];
+  if (size !== 10 && mode === 'alphabet') {
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+  }
+  return { labels: Array.from({length: size * size}, (_, i) => size !== 10 && mode === 'alphabet' ? pool[i] : String(i + 1)), checked: Array(size * size).fill(false) };
 }
 export function newState() { return { size: 3, mode: 'alphabet', boards: {} }; }
 export function boardKey(size, mode) { return `${size}-${mode}`; }
@@ -28,7 +36,16 @@ export function validateBingo(raw) {
     const key = boardKey(size, mode), board = raw.boards[key];
     if (!board) continue;
     if (!Array.isArray(board.labels) || board.labels.length !== size * size || board.labels.some(x => typeof x !== 'string' || !x.trim() || x.length > 12) || !Array.isArray(board.checked) || board.checked.length !== size * size || board.checked.some(x => typeof x !== 'boolean')) throw new Error('Invalid bingo board');
-    state.boards[key] = {labels: board.labels.map((label, i) => size === 10 && mode === 'number' ? (/^\d+$/.test(label) ? label : String(i + 1)) : size !== 10 && mode === 'alphabet' && label === 'Q' ? 'Q/U' : label), checked: [...board.checked]};
+    const labels = [...board.labels];
+    if (size !== 10 && mode === 'alphabet') {
+      let hasPair = labels.includes('Q/U');
+      for (let i = 0; i < labels.length; i++) {
+        if (!['Q', 'U'].includes(labels[i])) continue;
+        if (!hasPair) { labels[i] = 'Q/U'; hasPair = true; }
+        else { labels[i] = ['Z', ...LETTERS].find(letter => !labels.includes(letter)); }
+      }
+    }
+    state.boards[key] = {labels: labels.map((label, i) => size === 10 && mode === 'number' ? (/^\d+$/.test(label) ? label : String(i + 1)) : label), checked: [...board.checked]};
   }
   return state;
 }
